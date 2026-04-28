@@ -1,24 +1,24 @@
 const express = require("express");
-const assessmentService = require("../../services/assessment.service");
+const documentService = require("../../services/document_service");
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  const assessments = assessmentService.listAssessments();
+  const documents = documentService.listDocuments();
 
   res.status(200).json({
-    data: assessments,
-    message: "Assessments retrieved successfully",
+    data: documents,
+    message: "Documents retrieved successfully",
   });
 });
 
 router.post("/", (req, res) => {
   try {
-    const assessment = assessmentService.createAssessment(req.body);
+    const document = documentService.createDocument(req.body);
 
     res.status(201).json({
-      data: assessment,
-      message: "Assessment created successfully",
+      data: document,
+      message: "Document created successfully",
     });
   } catch (error) {
     res.status(error.statusCode || 500).json({

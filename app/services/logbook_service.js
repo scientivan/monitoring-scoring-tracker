@@ -1,4 +1,4 @@
-const logbookRepository = require("../repositories/logbook.repository");
+const logbookRepository = require("../repositories/logbook_repo");
 
 function createValidationError(message) {
   const error = new Error(message);

@@ -1,24 +1,24 @@
 const express = require("express");
-const documentService = require("../../services/document.service");
+const logbookService = require("../../services/logbook_service");
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  const documents = documentService.listDocuments();
+  const logbooks = logbookService.listLogbooks();
 
   res.status(200).json({
-    data: documents,
-    message: "Documents retrieved successfully",
+    data: logbooks,
+    message: "Logbooks retrieved successfully",
   });
 });
 
 router.post("/", (req, res) => {
   try {
-    const document = documentService.createDocument(req.body);
+    const logbook = logbookService.createLogbook(req.body);
 
     res.status(201).json({
-      data: document,
-      message: "Document created successfully",
+      data: logbook,
+      message: "Logbook created successfully",
     });
   } catch (error) {
     res.status(error.statusCode || 500).json({

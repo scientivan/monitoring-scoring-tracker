@@ -1,4 +1,4 @@
-const assessmentRepository = require("../repositories/assessment.repository");
+const assessmentRepository = require("../repositories/assessment_repo");
 
 function createValidationError(message) {
   const error = new Error(message);

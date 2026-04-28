@@ -1,4 +1,4 @@
-const documentRepository = require("../repositories/document.repository");
+const documentRepository = require("../repositories/document_repo");
 
 function createValidationError(message) {
   const error = new Error(message);

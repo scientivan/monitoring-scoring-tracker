@@ -1,24 +1,24 @@
 const express = require("express");
-const logbookService = require("../../services/logbook.service");
+const assessmentService = require("../../services/assessment_service");
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  const logbooks = logbookService.listLogbooks();
+  const assessments = assessmentService.listAssessments();
 
   res.status(200).json({
-    data: logbooks,
-    message: "Logbooks retrieved successfully",
+    data: assessments,
+    message: "Assessments retrieved successfully",
   });
 });
 
 router.post("/", (req, res) => {
   try {
-    const logbook = logbookService.createLogbook(req.body);
+    const assessment = assessmentService.createAssessment(req.body);
 
     res.status(201).json({
-      data: logbook,
-      message: "Logbook created successfully",
+      data: assessment,
+      message: "Assessment created successfully",
     });
   } catch (error) {
     res.status(error.statusCode || 500).json({
