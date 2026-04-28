@@ -1,16 +1,8 @@
 const express = require("express");
 const documentService = require("../../services/document_service");
+const { buildErrorResponse } = require("../../core/api_error");
 
 const router = express.Router();
-
-router.get("/", (req, res) => {
-  const documents = documentService.listDocuments();
-
-  res.status(200).json({
-    data: documents,
-    message: "Documents retrieved successfully",
-  });
-});
 
 router.post("/", (req, res) => {
   try {
@@ -21,9 +13,46 @@ router.post("/", (req, res) => {
       message: "Document created successfully",
     });
   } catch (error) {
-    res.status(error.statusCode || 500).json({
-      error: error.message || "Internal server error",
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.get("/team/:teamId", (req, res) => {
+  try {
+    const documents = documentService.listDocumentsByTeam(req.params.teamId);
+
+    res.status(200).json({
+      data: documents,
+      message: "Documents retrieved successfully",
     });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.get("/:id/download", (req, res) => {
+  try {
+    const download = documentService.getDocumentDownload(req.params.id);
+
+    res.status(200).json({
+      data: download,
+      message: "Document download link retrieved successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.get("/:id", (req, res) => {
+  try {
+    const document = documentService.getDocumentById(req.params.id);
+
+    res.status(200).json({
+      data: document,
+      message: "Document retrieved successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
   }
 });
 

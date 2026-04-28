@@ -3,10 +3,14 @@ let nextId = 1;
 
 function createLogbook(payload) {
   const logbook = {
-    id: nextId++,
-    week: payload.week,
-    summary: payload.summary,
-    status: "submitted",
+    id: `logbook-${nextId++}`,
+    teamId: payload.teamId,
+    authorId: payload.authorId,
+    sprintNumber: payload.sprintNumber || null,
+    status: payload.status,
+    description: payload.description,
+    blockers: payload.blockers || null,
+    createdAt: new Date().toISOString(),
   };
 
   logbooks.push(logbook);
@@ -14,11 +18,17 @@ function createLogbook(payload) {
   return logbook;
 }
 
-function listLogbooks() {
-  return [...logbooks];
+function listLogbooksByTeam(teamId) {
+  return logbooks.filter((logbook) => logbook.teamId === teamId);
+}
+
+function getLatestLogbookByTeam(teamId) {
+  const teamLogbooks = listLogbooksByTeam(teamId);
+  return teamLogbooks[teamLogbooks.length - 1] || null;
 }
 
 module.exports = {
   createLogbook,
-  listLogbooks,
+  listLogbooksByTeam,
+  getLatestLogbookByTeam,
 };

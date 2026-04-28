@@ -1,16 +1,8 @@
 const express = require("express");
 const logbookService = require("../../services/logbook_service");
+const { buildErrorResponse } = require("../../core/api_error");
 
 const router = express.Router();
-
-router.get("/", (req, res) => {
-  const logbooks = logbookService.listLogbooks();
-
-  res.status(200).json({
-    data: logbooks,
-    message: "Logbooks retrieved successfully",
-  });
-});
 
 router.post("/", (req, res) => {
   try {
@@ -21,9 +13,33 @@ router.post("/", (req, res) => {
       message: "Logbook created successfully",
     });
   } catch (error) {
-    res.status(error.statusCode || 500).json({
-      error: error.message || "Internal server error",
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.get("/team/:teamId/latest", (req, res) => {
+  try {
+    const latestLogbook = logbookService.getLatestLogbookByTeam(req.params.teamId);
+
+    res.status(200).json({
+      data: latestLogbook,
+      message: "Latest logbook retrieved successfully",
     });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.get("/team/:teamId", (req, res) => {
+  try {
+    const logbooks = logbookService.listLogbooksByTeam(req.params.teamId);
+
+    res.status(200).json({
+      data: logbooks,
+      message: "Logbooks retrieved successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
   }
 });
 

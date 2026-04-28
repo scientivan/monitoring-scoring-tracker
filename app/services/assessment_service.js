@@ -1,35 +1,67 @@
 const assessmentRepository = require("../repositories/assessment_repo");
+const eventPublisher = require("./event_publisher");
+const nftService = require("./nft_service");
+const { notFoundError, validationError } = require("../core/api_error");
 
-function createValidationError(message) {
-  const error = new Error(message);
-  error.statusCode = 400;
-  return error;
+function requireString(value, fieldName) {
+  if (!value || typeof value !== "string" || !value.trim()) {
+    throw validationError(`Field '${fieldName}' is required`);
+  }
 }
 
 function createAssessment(payload = {}) {
-  if (!payload.assessor || typeof payload.assessor !== "string" || !payload.assessor.trim()) {
-    throw createValidationError("assessor is required");
-  }
+  requireString(payload.teamId, "teamId");
+  requireString(payload.graderId, "graderId");
 
-  if (payload.score === undefined || payload.score === null || payload.score === "") {
-    throw createValidationError("score is required");
-  }
-
-  if (typeof payload.score !== "number" || payload.score < 0) {
-    throw createValidationError("score must be a number greater than or equal to 0");
+  if (typeof payload.finalScore !== "number" || payload.finalScore < 0) {
+    throw validationError("Field 'finalScore' must be a number greater than or equal to 0");
   }
 
   return assessmentRepository.createAssessment({
-    assessor: payload.assessor.trim(),
-    score: payload.score,
+    teamId: payload.teamId.trim(),
+    graderId: payload.graderId.trim(),
+    scoreArchitecture: payload.scoreArchitecture,
+    scoreImplementation: payload.scoreImplementation,
+    scoreDocumentation: payload.scoreDocumentation,
+    scorePresentation: payload.scorePresentation,
+    finalScore: payload.finalScore,
+    notes: typeof payload.notes === "string" ? payload.notes.trim() : null,
+    walletAddress:
+      typeof payload.walletAddress === "string" ? payload.walletAddress.trim() : null,
   });
 }
 
-function listAssessments() {
-  return assessmentRepository.listAssessments();
+function listAssessmentsByTeam(teamId) {
+  requireString(teamId, "teamId");
+  return assessmentRepository.listAssessmentsByTeam(teamId.trim());
+}
+
+function lockAssessment(id) {
+  requireString(id, "id");
+
+  const lockedAssessment = assessmentRepository.lockAssessment(id.trim());
+
+  if (!lockedAssessment) {
+    throw notFoundError(`Assessment with id '${id}' was not found`);
+  }
+
+  const publishedEvent = eventPublisher.publish("nilai_final_dikunci", {
+    assessmentId: lockedAssessment.id,
+    teamId: lockedAssessment.teamId,
+    finalScore: lockedAssessment.finalScore,
+  });
+
+  const nftRecord = nftService.createMockNftFromAssessment(lockedAssessment);
+
+  return {
+    assessment: lockedAssessment,
+    event: publishedEvent,
+    nft: nftRecord,
+  };
 }
 
 module.exports = {
   createAssessment,
-  listAssessments,
+  listAssessmentsByTeam,
+  lockAssessment,
 };

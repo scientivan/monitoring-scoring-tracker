@@ -1,11 +1,24 @@
+const events = [];
+
 function publish(eventName, payload) {
-  return {
+  const event = {
+    id: `event-${events.length + 1}`,
     eventName,
     payload,
-    status: "not_implemented",
+    status: "pending",
+    publishedAt: new Date().toISOString(),
   };
+
+  events.push(event);
+
+  return event;
+}
+
+function listEvents() {
+  return [...events];
 }
 
 module.exports = {
   publish,
+  listEvents,
 };

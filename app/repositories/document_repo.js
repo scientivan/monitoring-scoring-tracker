@@ -3,10 +3,16 @@ let nextId = 1;
 
 function createDocument(payload) {
   const document = {
-    id: nextId++,
-    title: payload.title,
+    id: `document-${nextId++}`,
+    teamId: payload.teamId,
+    uploaderId: payload.uploaderId,
+    fileUrl: payload.fileUrl,
     fileName: payload.fileName,
-    status: "uploaded",
+    fileType: payload.fileType,
+    fileSize: payload.fileSize,
+    fileHash: payload.fileHash,
+    description: payload.description || null,
+    createdAt: new Date().toISOString(),
   };
 
   documents.push(document);
@@ -14,11 +20,16 @@ function createDocument(payload) {
   return document;
 }
 
-function listDocuments() {
-  return [...documents];
+function listDocumentsByTeam(teamId) {
+  return documents.filter((document) => document.teamId === teamId);
+}
+
+function getDocumentById(id) {
+  return documents.find((document) => document.id === id) || null;
 }
 
 module.exports = {
   createDocument,
-  listDocuments,
+  listDocumentsByTeam,
+  getDocumentById,
 };

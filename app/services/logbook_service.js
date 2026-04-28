@@ -1,35 +1,61 @@
 const logbookRepository = require("../repositories/logbook_repo");
+const { notFoundError, validationError } = require("../core/api_error");
 
-function createValidationError(message) {
-  const error = new Error(message);
-  error.statusCode = 400;
-  return error;
+function requireString(value, fieldName) {
+  if (!value || typeof value !== "string" || !value.trim()) {
+    throw validationError(`Field '${fieldName}' is required`);
+  }
 }
 
 function createLogbook(payload = {}) {
-  if (payload.week === undefined || payload.week === null || payload.week === "") {
-    throw createValidationError("week is required");
+  requireString(payload.teamId, "teamId");
+  requireString(payload.authorId, "authorId");
+  requireString(payload.status, "status");
+  requireString(payload.description, "description");
+
+  if (
+    payload.sprintNumber !== undefined &&
+    payload.sprintNumber !== null &&
+    (typeof payload.sprintNumber !== "number" || payload.sprintNumber <= 0)
+  ) {
+    throw validationError("Field 'sprintNumber' must be a positive number");
   }
 
-  if (typeof payload.week !== "number" || payload.week <= 0) {
-    throw createValidationError("week must be a positive number");
-  }
-
-  if (!payload.summary || typeof payload.summary !== "string" || !payload.summary.trim()) {
-    throw createValidationError("summary is required");
+  if (!["in_progress", "blocked", "completed"].includes(payload.status)) {
+    throw validationError(
+      "Field 'status' must be one of: in_progress, blocked, completed",
+    );
   }
 
   return logbookRepository.createLogbook({
-    week: payload.week,
-    summary: payload.summary.trim(),
+    teamId: payload.teamId.trim(),
+    authorId: payload.authorId.trim(),
+    sprintNumber: payload.sprintNumber,
+    status: payload.status.trim(),
+    description: payload.description.trim(),
+    blockers: typeof payload.blockers === "string" ? payload.blockers.trim() : null,
   });
 }
 
-function listLogbooks() {
-  return logbookRepository.listLogbooks();
+function listLogbooksByTeam(teamId) {
+  requireString(teamId, "teamId");
+  return logbookRepository.listLogbooksByTeam(teamId.trim());
+}
+
+function getLatestLogbookByTeam(teamId) {
+  requireString(teamId, "teamId");
+
+  const latestLogbook = logbookRepository.getLatestLogbookByTeam(teamId.trim());
+
+  if (!latestLogbook) {
+    throw notFoundError(`No logbook entries found for team '${teamId}'`);
+  }
+
+  return latestLogbook;
 }
 
 module.exports = {
   createLogbook,
-  listLogbooks,
+  listLogbooksByTeam,
+  getLatestLogbookByTeam,
 };
