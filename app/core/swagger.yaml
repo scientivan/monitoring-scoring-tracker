@@ -77,6 +77,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateDocumentResponse"
+        "400":
+          description: Invalid document payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/logbooks:
     get:
@@ -110,6 +116,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateLogbookResponse"
+        "400":
+          description: Invalid logbook payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/assessments:
     get:
@@ -143,6 +155,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateAssessmentResponse"
+        "400":
+          description: Invalid assessment payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -164,6 +182,9 @@ components:
 
     DocumentInput:
       type: object
+      required:
+        - title
+        - fileName
       properties:
         title:
           type: string
@@ -210,6 +231,9 @@ components:
 
     LogbookInput:
       type: object
+      required:
+        - week
+        - summary
       properties:
         week:
           type: integer
@@ -256,6 +280,9 @@ components:
 
     AssessmentInput:
       type: object
+      required:
+        - assessor
+        - score
       properties:
         assessor:
           type: string
@@ -283,3 +310,10 @@ components:
         message:
           type: string
           example: "Assessments retrieved successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "title is required"

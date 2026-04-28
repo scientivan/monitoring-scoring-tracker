@@ -1,24 +1,30 @@
 const express = require("express");
+const assessmentService = require("../../services/assessment.service");
 
 const router = express.Router();
 
 router.get("/", (req, res) => {
+  const assessments = assessmentService.listAssessments();
+
   res.status(200).json({
-    data: [],
+    data: assessments,
     message: "Assessments retrieved successfully",
   });
 });
 
 router.post("/", (req, res) => {
-  res.status(201).json({
-    data: {
-      id: 1,
-      assessor: req.body.assessor || "Sample Assessor",
-      score: req.body.score || 0,
-      status: "draft",
-    },
-    message: "Assessment created successfully",
-  });
+  try {
+    const assessment = assessmentService.createAssessment(req.body);
+
+    res.status(201).json({
+      data: assessment,
+      message: "Assessment created successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || "Internal server error",
+    });
+  }
 });
 
 module.exports = router;
