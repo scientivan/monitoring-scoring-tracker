@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: API Project Monitoring & Scoring (Tracker)
-  description: Dokumentasi REST API untuk microservices.
+  description: REST API documentation for the monitoring and scoring tracker.
   version: 1.0.0
   contact:
     name: Tim Developer
@@ -9,95 +9,277 @@ info:
 
 servers:
   - url: "http://localhost:3000/"
-    description: Server Development
+    description: Development server
   - url: "https://api.example.com/"
-    description: Server Production
+    description: Production server
 
 tags:
-  - name: Dokumen
-    description: Operasi terkait dokumen
-  - name: Logbook
-    description: Operasi terkait logbook
-  - name: Penilaian
-    description: Operasi terkait penilaian
+  - name: System
+    description: System endpoints
+  - name: Documents
+    description: Document-related operations
+  - name: Logbooks
+    description: Logbook-related operations
+  - name: Assessments
+    description: Assessment-related operations
 
 paths:
-  /dokumen:
+  /api/health:
     get:
-      summary: Mendapatkan daftar dokumen
-      description: Mengambil semua data dokumen yang tersedia di sistem.
+      summary: Check server health
+      description: Verifies that the Express server is running normally.
       tags:
-        - Dokumen
+        - System
       responses:
         "200":
-          description: Berhasil mengambil daftar dokumen
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Dokumen"
-
-    post:
-      summary: Mengunggah dokumen baru
-      description: Mengirimkan file PDF ke server.
-      tags:
-        - Dokumen
-      requestBody:
-        required: true
-        content:
-          application/pdf:
-            schema:
-              type: string
-              format: binary
-      responses:
-        "201":
-          description: Dokumen berhasil dibuat
+          description: Server is healthy
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    example: 101
+                  status:
+                    type: string
+                    example: OK
                   message:
                     type: string
-                    example: "Dokumen berhasil diunggah"
-        "400":
-          description: File yang dikirim bukan PDF
-        "415":
-          description: Tipe media tidak didukung
+                    example: Server is healthy
+
+  /api/documents:
+    get:
+      summary: Get documents
+      description: Returns a placeholder list of documents.
+      tags:
+        - Documents
+      responses:
+        "200":
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListDocumentsResponse"
+
+    post:
+      summary: Create document
+      description: Creates a placeholder document record.
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Document created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateDocumentResponse"
+
+  /api/logbooks:
+    get:
+      summary: Get logbooks
+      description: Returns a placeholder list of logbooks.
+      tags:
+        - Logbooks
+      responses:
+        "200":
+          description: Logbooks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListLogbooksResponse"
+
+    post:
+      summary: Create logbook
+      description: Creates a placeholder logbook record.
+      tags:
+        - Logbooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogbookInput"
+      responses:
+        "201":
+          description: Logbook created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateLogbookResponse"
+
+  /api/assessments:
+    get:
+      summary: Get assessments
+      description: Returns a placeholder list of assessments.
+      tags:
+        - Assessments
+      responses:
+        "200":
+          description: Assessments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListAssessmentsResponse"
+
+    post:
+      summary: Create assessment
+      description: Creates a placeholder assessment record.
+      tags:
+        - Assessments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentInput"
+      responses:
+        "201":
+          description: Assessment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAssessmentResponse"
 
 components:
   schemas:
-    # Skema untuk respons (dengan ID dan Timestamp)
-    Dokumen:
+    Document:
       type: object
       properties:
         id:
           type: integer
-          example: 101
-        judul:
+          example: 1
+        title:
           type: string
-          example: "Laporan Mingguan"
-        tipe:
+          example: "Sample Document"
+        fileName:
           type: string
-          example: "pdf"
-        tanggalUnggah:
+          example: "sample.pdf"
+        status:
           type: string
-          format: date-time
-          example: "2026-04-23T10:00:00Z"
-    # Skema untuk input (tanpa ID dan Timestamp)
-    DokumenInput:
+          example: "uploaded"
+
+    DocumentInput:
       type: object
-      required:
-        - judul
-        - tipe
       properties:
-        judul:
+        title:
           type: string
-          example: "Laporan Proyek"
-        tipe:
+          example: "Capstone Proposal"
+        fileName:
           type: string
-          example: "docx"
+          example: "proposal.pdf"
+
+    CreateDocumentResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Document"
+        message:
+          type: string
+          example: "Document created successfully"
+
+    ListDocumentsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Document"
+        message:
+          type: string
+          example: "Documents retrieved successfully"
+
+    Logbook:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        week:
+          type: integer
+          example: 1
+        summary:
+          type: string
+          example: "Weekly progress update"
+        status:
+          type: string
+          example: "submitted"
+
+    LogbookInput:
+      type: object
+      properties:
+        week:
+          type: integer
+          example: 2
+        summary:
+          type: string
+          example: "Completed route scaffolding"
+
+    CreateLogbookResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Logbook"
+        message:
+          type: string
+          example: "Logbook created successfully"
+
+    ListLogbooksResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Logbook"
+        message:
+          type: string
+          example: "Logbooks retrieved successfully"
+
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        assessor:
+          type: string
+          example: "Sample Assessor"
+        score:
+          type: integer
+          example: 85
+        status:
+          type: string
+          example: "draft"
+
+    AssessmentInput:
+      type: object
+      properties:
+        assessor:
+          type: string
+          example: "Dr. Reviewer"
+        score:
+          type: integer
+          example: 90
+
+    CreateAssessmentResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Assessment"
+        message:
+          type: string
+          example: "Assessment created successfully"
+
+    ListAssessmentsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Assessment"
+        message:
+          type: string
+          example: "Assessments retrieved successfully"
