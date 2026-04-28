@@ -1,0 +1,18 @@
+# versi node.js yang ringan
+FROM node:18-alpine 
+
+# direktori backend sebagai rootnya (ketika di run)
+WORKDIR /app
+
+# copy file package.json + skalian install
+COPY package*.json ./
+RUN npm install
+
+# copy seluruh code backend
+COPY . .
+
+# init port untuk dipake backend
+EXPOSE 3300
+
+# perinta untuk ngerun backend
+CMD ["npm", "start"]
