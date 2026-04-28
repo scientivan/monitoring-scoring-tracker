@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: API Project Monitoring & Scoring (Tracker)
+  description: Dokumentasi REST API untuk microservices.
+  version: 1.0.0
+  contact:
+    name: Tim Developer
+    email: dev@example.com
+
+servers:
+  - url: "http://localhost:3000/"
+    description: Server Development
+  - url: "https://api.example.com/"
+    description: Server Production
+
+tags:
+  - name: Dokumen
+    description: Operasi terkait dokumen
+  - name: Logbook
+    description: Operasi terkait logbook
+  - name: Penilaian
+    description: Operasi terkait penilaian
+
+paths:
+  /dokumen:
+    get:
+      summary: Mendapatkan daftar dokumen
+      description: Mengambil semua data dokumen yang tersedia di sistem.
+      tags:
+        - Dokumen
+      responses:
+        "200":
+          description: Berhasil mengambil daftar dokumen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dokumen"
+
+    post:
+      summary: Mengunggah dokumen baru
+      description: Mengirimkan file PDF ke server.
+      tags:
+        - Dokumen
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Dokumen berhasil dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 101
+                  message:
+                    type: string
+                    example: "Dokumen berhasil diunggah"
+        "400":
+          description: File yang dikirim bukan PDF
+        "415":
+          description: Tipe media tidak didukung
+
+components:
+  schemas:
+    # Skema untuk respons (dengan ID dan Timestamp)
+    Dokumen:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        judul:
+          type: string
+          example: "Laporan Mingguan"
+        tipe:
+          type: string
+          example: "pdf"
+        tanggalUnggah:
+          type: string
+          format: date-time
+          example: "2026-04-23T10:00:00Z"
+    # Skema untuk input (tanpa ID dan Timestamp)
+    DokumenInput:
+      type: object
+      required:
+        - judul
+        - tipe
+      properties:
+        judul:
+          type: string
+          example: "Laporan Proyek"
+        tipe:
+          type: string
+          example: "docx"
