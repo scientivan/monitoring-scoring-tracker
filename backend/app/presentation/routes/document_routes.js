@@ -4,9 +4,9 @@ const { buildErrorResponse } = require("../../core/api_error");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const document = documentService.createDocument(req.body);
+    const document = await documentService.createDocument(req.body);
 
     res.status(201).json({
       data: document,
@@ -17,9 +17,9 @@ router.post("/", (req, res) => {
   }
 });
 
-router.get("/team/:teamId", (req, res) => {
+router.get("/team/:teamId", async (req, res) => {
   try {
-    const documents = documentService.listDocumentsByTeam(req.params.teamId);
+    const documents = await documentService.listDocumentsByTeam(req.params.teamId);
 
     res.status(200).json({
       data: documents,
@@ -30,9 +30,9 @@ router.get("/team/:teamId", (req, res) => {
   }
 });
 
-router.get("/:id/download", (req, res) => {
+router.get("/:id/download", async (req, res) => {
   try {
-    const download = documentService.getDocumentDownload(req.params.id);
+    const download = await documentService.getDocumentDownload(req.params.id);
 
     res.status(200).json({
       data: download,
@@ -43,9 +43,9 @@ router.get("/:id/download", (req, res) => {
   }
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const document = documentService.getDocumentById(req.params.id);
+    const document = await documentService.getDocumentById(req.params.id);
 
     res.status(200).json({
       data: document,

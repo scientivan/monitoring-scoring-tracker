@@ -7,7 +7,7 @@ function requireString(value, fieldName) {
   }
 }
 
-function createDocument(payload = {}) {
+async function createDocument(payload = {}) {
   requireString(payload.teamId, "teamId");
   requireString(payload.uploaderId, "uploaderId");
   requireString(payload.fileUrl, "fileUrl");
@@ -31,15 +31,15 @@ function createDocument(payload = {}) {
   });
 }
 
-function listDocumentsByTeam(teamId) {
+async function listDocumentsByTeam(teamId) {
   requireString(teamId, "teamId");
   return documentRepository.listDocumentsByTeam(teamId.trim());
 }
 
-function getDocumentById(id) {
+async function getDocumentById(id) {
   requireString(id, "id");
 
-  const document = documentRepository.getDocumentById(id.trim());
+  const document = await documentRepository.getDocumentById(id.trim());
 
   if (!document) {
     throw notFoundError(`Document with id '${id}' was not found`);
@@ -48,8 +48,8 @@ function getDocumentById(id) {
   return document;
 }
 
-function getDocumentDownload(id) {
-  const document = getDocumentById(id);
+async function getDocumentDownload(id) {
+  const document = await getDocumentById(id);
 
   return {
     id: document.id,
