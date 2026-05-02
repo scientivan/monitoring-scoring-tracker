@@ -94,7 +94,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DocumentResponse"
+                $ref: "#/components/schemas/DocumentDetailResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
         "404":
           description: Document not found
           content:
@@ -120,6 +126,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DocumentDownloadResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+
+  /api/v1/documents/{id}/review:
+    post:
+      summary: Create a new document review entry
+      tags:
+        - Documents
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentReviewCreateInput"
+      responses:
+        "201":
+          description: Document review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentReviewCreateResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
 
   /api/v1/logbook:
     post:
@@ -323,6 +378,25 @@ components:
           type: string
           format: date-time
 
+    DocumentReview:
+      type: object
+      properties:
+        id:
+          type: string
+        documentId:
+          type: string
+        reviewerId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, needs_revision]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
     DocumentCreateInput:
       type: object
       required:
@@ -359,6 +433,24 @@ components:
         message:
           type: string
 
+    DocumentDetail:
+      allOf:
+        - $ref: "#/components/schemas/Document"
+        - type: object
+          properties:
+            latestReview:
+              oneOf:
+                - $ref: "#/components/schemas/DocumentReview"
+                - type: "null"
+
+    DocumentDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/DocumentDetail"
+        message:
+          type: string
+
     DocumentListResponse:
       type: object
       properties:
@@ -383,6 +475,36 @@ components:
               type: string
             downloadStatus:
               type: string
+        message:
+          type: string
+
+    DocumentReviewCreateInput:
+      type: object
+      required:
+        - reviewerId
+        - status
+      properties:
+        reviewerId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, needs_revision]
+        notes:
+          type: string
+
+    DocumentReviewCreatePayload:
+      type: object
+      properties:
+        documentId:
+          type: string
+        review:
+          $ref: "#/components/schemas/DocumentReview"
+
+    DocumentReviewCreateResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/DocumentReviewCreatePayload"
         message:
           type: string
 
