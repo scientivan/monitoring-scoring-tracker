@@ -45,11 +45,24 @@ router.get("/:id/download", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const document = await documentService.getDocumentById(req.params.id);
+    const document = await documentService.getDocumentDetail(req.params.id);
 
     res.status(200).json({
       data: document,
       message: "Document retrieved successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.post("/:id/review", async (req, res) => {
+  try {
+    const review = await documentService.createDocumentReview(req.params.id, req.body);
+
+    res.status(201).json({
+      data: review,
+      message: "Document review created successfully",
     });
   } catch (error) {
     res.status(error.statusCode || 500).json(buildErrorResponse(error));

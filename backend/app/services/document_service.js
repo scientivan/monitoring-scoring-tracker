@@ -1,5 +1,8 @@
 const documentRepository = require("../repositories/document_repo");
+const documentReviewRepository = require("../repositories/document_review_repo");
 const { notFoundError, validationError } = require("../core/api_error");
+
+const allowedReviewStatuses = ["pending", "approved", "rejected", "needs_revision"];
 
 function requireString(value, fieldName) {
   if (!value || typeof value !== "string" || !value.trim()) {
@@ -48,6 +51,16 @@ async function getDocumentById(id) {
   return document;
 }
 
+async function getDocumentDetail(id) {
+  const document = await getDocumentById(id);
+  const latestReview = await documentReviewRepository.getLatestReviewByDocumentId(document.id);
+
+  return {
+    ...document,
+    latestReview,
+  };
+}
+
 async function getDocumentDownload(id) {
   const document = await getDocumentById(id);
 
@@ -59,9 +72,37 @@ async function getDocumentDownload(id) {
   };
 }
 
+async function createDocumentReview(documentId, payload = {}) {
+  requireString(documentId, "id");
+  requireString(payload.reviewerId, "reviewerId");
+  requireString(payload.status, "status");
+
+  if (!allowedReviewStatuses.includes(payload.status.trim())) {
+    throw validationError(
+      "Field 'status' must be one of: pending, approved, rejected, needs_revision",
+    );
+  }
+
+  const document = await getDocumentById(documentId);
+
+  const review = await documentReviewRepository.createDocumentReview({
+    documentId: document.id,
+    reviewerId: payload.reviewerId.trim(),
+    status: payload.status.trim(),
+    notes: typeof payload.notes === "string" ? payload.notes.trim() : null,
+  });
+
+  return {
+    documentId: document.id,
+    review,
+  };
+}
+
 module.exports = {
   createDocument,
   listDocumentsByTeam,
   getDocumentById,
+  getDocumentDetail,
   getDocumentDownload,
+  createDocumentReview,
 };
