@@ -1,6 +1,8 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: dockerfile
     ports:
       - "3300:3300"
     restart: always
@@ -11,6 +13,9 @@ services:
       - DB_USER=kel4
       - DB_PASSWORD=kel4
       - DB_NAME=kel4
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-}
     depends_on:
       - db
   nginx:
@@ -34,7 +39,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kel4 -d kel4"]
+      test: [ "CMD-SHELL", "pg_isready -U kel4 -d kel4" ]
       interval: 10s
       timeout: 5s
       retries: 5
