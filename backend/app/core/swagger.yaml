@@ -8,8 +8,10 @@ info:
     email: dev@example.com
 
 servers:
-  - url: "http://localhost:3000/"
-    description: Development server
+  - url: "http://localhost:3300/"
+    description: Backend development server
+  - url: "http://localhost/"
+    description: Nginx gateway for local development
 
 tags:
   - name: System
@@ -41,7 +43,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: "#/components/schemas/DocumentCreateInput"
       responses:
@@ -110,7 +112,7 @@ paths:
 
   /api/v1/documents/{id}/download:
     get:
-      summary: Download document placeholder
+      summary: Get document download link
       tags:
         - Documents
       parameters:
@@ -402,28 +404,18 @@ components:
       required:
         - teamId
         - uploaderId
-        - fileUrl
-        - fileName
-        - fileType
-        - fileSize
-        - fileHash
+        - file
       properties:
         teamId:
           type: string
         uploaderId:
           type: string
-        fileUrl:
-          type: string
-        fileName:
-          type: string
-        fileType:
-          type: string
-        fileSize:
-          type: integer
-        fileHash:
-          type: string
         description:
           type: string
+        file:
+          type: string
+          format: binary
+          description: PDF file upload
 
     DocumentResponse:
       type: object
@@ -475,6 +467,7 @@ components:
               type: string
             downloadStatus:
               type: string
+              example: ready
         message:
           type: string
 

@@ -1,12 +1,15 @@
 const express = require("express");
 const documentService = require("../../services/document_service");
 const { buildErrorResponse } = require("../../core/api_error");
+const { handleDocumentUpload } = require("../middleware/document_upload");
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    const document = await documentService.createDocument(req.body);
+    await handleDocumentUpload(req, res);
+
+    const document = await documentService.createDocument(req.body, req.file);
 
     res.status(201).json({
       data: document,
