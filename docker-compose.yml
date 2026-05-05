@@ -4,10 +4,11 @@ services:
       context: ./backend
       dockerfile: dockerfile
     ports:
-      - "3300:3300"
+      - "8084:8080"
     restart: always
     environment:
       - NODE_ENV=production
+      - PORT=8080
       - DB_HOST=db # Gunakan nama service 'db', bukan 'localhost'
       - DB_PORT=5432 # Gunakan port internal container, bukan 5433
       - DB_USER=kel4

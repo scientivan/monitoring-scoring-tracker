@@ -4,7 +4,7 @@ const swaggerSpec = require("./app/core/swagger");
 const apiRoutes = require("./app/presentation/routes");
 
 const app = express();
-const port = 3300;
+const port = process.env.PORT || 8080;
 const HOST = "0.0.0.0"; //biar bisa diakses dari docker
 
 // Middleware untuk parsing JSON
