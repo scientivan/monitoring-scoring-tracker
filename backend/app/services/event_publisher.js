@@ -1,5 +1,4 @@
 const events = [];
-const eventLogRepository = require("../repositories/event_log_repo");
 
 function publish(eventName, payload) {
   const event = {
@@ -19,16 +18,7 @@ function listEvents() {
   return [...events];
 }
 
-async function publishToEventLog(eventType, payload) {
-  return eventLogRepository.createEventLog({
-    eventType,
-    payload,
-    status: "pending",
-  });
-}
-
 module.exports = {
   publish,
   listEvents,
-  publishToEventLog,
 };

@@ -8,18 +8,14 @@ info:
     email: dev@example.com
 
 servers:
-  - url: "http://localhost:3300/"
-    description: Backend development server
-  - url: "http://localhost/"
-    description: Nginx gateway for local development
+  - url: "http://localhost:3000/"
+    description: Development server
 
 tags:
   - name: System
     description: System endpoints
   - name: Documents
     description: Document-related operations
-  - name: Milestones
-    description: Milestone-related operations
   - name: Logbook
     description: Logbook-related operations
   - name: Assessments
@@ -45,7 +41,7 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               $ref: "#/components/schemas/DocumentCreateInput"
       responses:
@@ -98,13 +94,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DocumentDetailResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
+                $ref: "#/components/schemas/DocumentResponse"
         "404":
           description: Document not found
           content:
@@ -114,7 +104,7 @@ paths:
 
   /api/v1/documents/{id}/download:
     get:
-      summary: Get document download link
+      summary: Download document placeholder
       tags:
         - Documents
       parameters:
@@ -130,180 +120,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DocumentDownloadResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "404":
-          description: Document not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-
-  /api/v1/documents/{id}/review:
-    post:
-      summary: Create a new document review entry
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DocumentReviewCreateInput"
-      responses:
-        "201":
-          description: Document review created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DocumentReviewCreateResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "404":
-          description: Document not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-
-  /api/v1/milestones:
-    post:
-      summary: Create a new milestone
-      tags:
-        - Milestones
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MilestoneCreateInput"
-      responses:
-        "201":
-          description: Milestone created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MilestoneResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-    get:
-      summary: List milestones
-      tags:
-        - Milestones
-      parameters:
-        - in: query
-          name: employerId
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: studentId
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: status
-          required: false
-          schema:
-            type: string
-            enum: [open, in_progress, completed, cancelled]
-      responses:
-        "200":
-          description: Milestones retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MilestoneListResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-
-  /api/v1/milestones/{id}:
-    get:
-      summary: Get milestone detail
-      tags:
-        - Milestones
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Milestone retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MilestoneResponse"
-        "404":
-          description: Milestone not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-    patch:
-      summary: Update an existing milestone
-      tags:
-        - Milestones
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MilestoneUpdateInput"
-      responses:
-        "200":
-          description: Milestone updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MilestoneResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "404":
-          description: Milestone not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "409":
-          description: Milestone cannot be edited in its current state
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
 
   /api/v1/logbook:
     post:
@@ -507,66 +323,39 @@ components:
           type: string
           format: date-time
 
-    DocumentReview:
-      type: object
-      properties:
-        id:
-          type: string
-        documentId:
-          type: string
-        reviewerId:
-          type: string
-        status:
-          type: string
-          enum: [pending, approved, rejected, needs_revision]
-        notes:
-          type: string
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-
     DocumentCreateInput:
       type: object
       required:
         - teamId
         - uploaderId
-        - file
+        - fileUrl
+        - fileName
+        - fileType
+        - fileSize
+        - fileHash
       properties:
         teamId:
           type: string
         uploaderId:
           type: string
+        fileUrl:
+          type: string
+        fileName:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: integer
+        fileHash:
+          type: string
         description:
           type: string
-        file:
-          type: string
-          format: binary
-          description: PDF file upload
 
     DocumentResponse:
       type: object
       properties:
         data:
           $ref: "#/components/schemas/Document"
-        message:
-          type: string
-
-    DocumentDetail:
-      allOf:
-        - $ref: "#/components/schemas/Document"
-        - type: object
-          properties:
-            latestReview:
-              oneOf:
-                - $ref: "#/components/schemas/DocumentReview"
-                - type: "null"
-
-    DocumentDetailResponse:
-      type: object
-      properties:
-        data:
-          $ref: "#/components/schemas/DocumentDetail"
         message:
           type: string
 
@@ -594,124 +383,6 @@ components:
               type: string
             downloadStatus:
               type: string
-              example: ready
-        message:
-          type: string
-
-    DocumentReviewCreateInput:
-      type: object
-      required:
-        - reviewerId
-        - status
-      properties:
-        reviewerId:
-          type: string
-        status:
-          type: string
-          enum: [pending, approved, rejected, needs_revision]
-        notes:
-          type: string
-
-    DocumentReviewCreatePayload:
-      type: object
-      properties:
-        documentId:
-          type: string
-        review:
-          $ref: "#/components/schemas/DocumentReview"
-
-    DocumentReviewCreateResponse:
-      type: object
-      properties:
-        data:
-          $ref: "#/components/schemas/DocumentReviewCreatePayload"
-        message:
-          type: string
-
-    Milestone:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-        paymentAmount:
-          type: number
-        description:
-          type: string
-          nullable: true
-        deadline:
-          type: string
-          format: date-time
-        employerId:
-          type: string
-        studentId:
-          type: string
-        status:
-          type: string
-          enum: [open, in_progress, completed, cancelled]
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-
-    MilestoneCreateInput:
-      type: object
-      required:
-        - title
-        - paymentAmount
-        - deadline
-        - employerId
-        - studentId
-      properties:
-        title:
-          type: string
-        paymentAmount:
-          type: number
-        description:
-          type: string
-        deadline:
-          type: string
-          format: date-time
-        employerId:
-          type: string
-        studentId:
-          type: string
-
-    MilestoneUpdateInput:
-      type: object
-      properties:
-        title:
-          type: string
-        paymentAmount:
-          type: number
-        description:
-          type: string
-          nullable: true
-        deadline:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum: [open, in_progress, completed, cancelled]
-
-    MilestoneResponse:
-      type: object
-      properties:
-        data:
-          $ref: "#/components/schemas/Milestone"
-        message:
-          type: string
-
-    MilestoneListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/Milestone"
         message:
           type: string
 
