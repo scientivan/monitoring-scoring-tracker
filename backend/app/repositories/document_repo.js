@@ -1,31 +1,77 @@
-const documents = [];
-let nextId = 1;
+const { pool } = require("../db/connection");
 
-function createDocument(payload) {
-  const document = {
-    id: `document-${nextId++}`,
-    teamId: payload.teamId,
-    uploaderId: payload.uploaderId,
-    fileUrl: payload.fileUrl,
-    fileName: payload.fileName,
-    fileType: payload.fileType,
-    fileSize: payload.fileSize,
-    fileHash: payload.fileHash,
-    description: payload.description || null,
-    createdAt: new Date().toISOString(),
+function mapDocumentRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    teamId: row.team_id,
+    uploaderId: row.uploader_id,
+    fileUrl: row.file_url,
+    fileName: row.file_name,
+    fileType: row.file_type,
+    fileSize: Number(row.file_size),
+    fileHash: row.file_hash,
+    description: row.description,
+    createdAt: row.created_at,
   };
-
-  documents.push(document);
-
-  return document;
 }
 
-function listDocumentsByTeam(teamId) {
-  return documents.filter((document) => document.teamId === teamId);
+async function createDocument(payload) {
+  const query = `
+    INSERT INTO documents (
+      team_id,
+      uploader_id,
+      file_url,
+      file_name,
+      file_type,
+      file_size,
+      file_hash,
+      description
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *
+  `;
+
+  const values = [
+    payload.teamId,
+    payload.uploaderId,
+    payload.fileUrl,
+    payload.fileName,
+    payload.fileType,
+    payload.fileSize,
+    payload.fileHash,
+    payload.description,
+  ];
+
+  const result = await pool.query(query, values);
+  return mapDocumentRow(result.rows[0]);
 }
 
-function getDocumentById(id) {
-  return documents.find((document) => document.id === id) || null;
+async function listDocumentsByTeam(teamId) {
+  const query = `
+    SELECT *
+    FROM documents
+    WHERE team_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [teamId]);
+  return result.rows.map(mapDocumentRow);
+}
+
+async function getDocumentById(id) {
+  const query = `
+    SELECT *
+    FROM documents
+    WHERE id = $1
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [id]);
+  return mapDocumentRow(result.rows[0]);
 }
 
 module.exports = {
