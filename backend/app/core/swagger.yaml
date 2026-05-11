@@ -20,6 +20,8 @@ tags:
     description: Document-related operations
   - name: Milestones
     description: Milestone-related operations
+  - name: Submissions
+    description: Milestone submission proof operations
   - name: Logbook
     description: Logbook-related operations
   - name: Assessments
@@ -300,6 +302,121 @@ paths:
                 $ref: "#/components/schemas/StandardErrorResponse"
         "409":
           description: Milestone cannot be edited in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+
+  /api/v1/submissions:
+    post:
+      summary: Create a new milestone submission proof
+      tags:
+        - Submissions
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SubmissionCreateInput"
+      responses:
+        "201":
+          description: Submission created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "404":
+          description: Milestone not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+    get:
+      summary: List milestone submissions
+      tags:
+        - Submissions
+      parameters:
+        - in: query
+          name: milestoneId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: studentId
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [submitted, approved, rejected, needs_revision]
+      responses:
+        "200":
+          description: Submissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionListResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+
+  /api/v1/submissions/{id}:
+    get:
+      summary: Get submission detail
+      tags:
+        - Submissions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Submission retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "404":
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+
+  /api/v1/submissions/{id}/download:
+    get:
+      summary: Get submission proof download link
+      tags:
+        - Submissions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Submission download link retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionDownloadResponse"
+        "404":
+          description: Submission or uploaded file not found
           content:
             application/json:
               schema:
@@ -712,6 +829,113 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Milestone"
+        message:
+          type: string
+
+    SubmissionLink:
+      type: object
+      properties:
+        url:
+          type: string
+        label:
+          type: string
+          nullable: true
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+        milestoneId:
+          type: string
+        studentId:
+          type: string
+        description:
+          type: string
+        fileUrl:
+          type: string
+          nullable: true
+        fileName:
+          type: string
+          nullable: true
+        fileType:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        fileHash:
+          type: string
+          nullable: true
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubmissionLink"
+        status:
+          type: string
+          enum: [submitted, approved, rejected, needs_revision]
+        submittedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SubmissionCreateInput:
+      type: object
+      required:
+        - milestoneId
+        - studentId
+        - description
+      properties:
+        milestoneId:
+          type: string
+        studentId:
+          type: string
+        description:
+          type: string
+        links:
+          type: string
+          description: JSON array of URLs or objects with url and label
+          example: '[{"url":"https://example.com/proof","label":"Demo"}]'
+        file:
+          type: string
+          format: binary
+          description: Optional PDF, JPG, PNG, or WEBP proof file
+
+    SubmissionResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Submission"
+        message:
+          type: string
+
+    SubmissionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Submission"
+        message:
+          type: string
+
+    SubmissionDownloadResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            fileName:
+              type: string
+            fileUrl:
+              type: string
+            downloadStatus:
+              type: string
+              example: ready
         message:
           type: string
 

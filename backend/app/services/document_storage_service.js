@@ -14,20 +14,15 @@ function createSafeFileName(fileName) {
     .toLowerCase();
 }
 
-function buildStoragePath(teamId, fileName) {
+function buildStoragePath(folderName, ownerId, fileName) {
   const uniquePrefix = crypto.randomUUID();
-  return `documents/${teamId}/${uniquePrefix}-${createSafeFileName(fileName)}`;
+  return `${folderName}/${ownerId}/${uniquePrefix}-${createSafeFileName(fileName)}`;
 }
 
-async function uploadDocumentFile({ teamId, file }) {
-  if (!file) {
-    throw validationError("Field 'file' is required");
-  }
-
+async function uploadFileToSupabase({ storagePath, file }) {
   const supabaseUrl = getSupabaseUrl();
   const serviceRoleKey = getSupabaseServiceRoleKey();
   const bucketName = getSupabaseBucketName();
-  const storagePath = buildStoragePath(teamId, file.originalname);
 
   const uploadResponse = await fetch(
     `${supabaseUrl}/storage/v1/object/${bucketName}/${storagePath}`,
@@ -48,7 +43,33 @@ async function uploadDocumentFile({ teamId, file }) {
     throw new Error(`Failed to upload file to Supabase Storage: ${uploadError}`);
   }
 
-  const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${storagePath}`;
+  return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${storagePath}`;
+}
+
+async function uploadDocumentFile({ teamId, file }) {
+  if (!file) {
+    throw validationError("Field 'file' is required");
+  }
+
+  const storagePath = buildStoragePath("documents", teamId, file.originalname);
+  const publicUrl = await uploadFileToSupabase({ storagePath, file });
+
+  return {
+    fileUrl: publicUrl,
+    storagePath,
+  };
+}
+
+async function uploadSubmissionProofFile({ milestoneId, file }) {
+  if (!file) {
+    return {
+      fileUrl: null,
+      storagePath: null,
+    };
+  }
+
+  const storagePath = buildStoragePath("milestone-submissions", milestoneId, file.originalname);
+  const publicUrl = await uploadFileToSupabase({ storagePath, file });
 
   return {
     fileUrl: publicUrl,
@@ -76,5 +97,6 @@ async function removeDocumentFile(storagePath) {
 
 module.exports = {
   uploadDocumentFile,
+  uploadSubmissionProofFile,
   removeDocumentFile,
 };
