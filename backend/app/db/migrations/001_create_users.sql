@@ -9,7 +9,7 @@ CREATE TABLE users (
   wallet_address VARCHAR(42),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT chk_users_role
-    CHECK (role IN ('mahasiswa', 'panitia', 'dosen', 'mitra')),
+    CHECK (role IN ('talent', 'client')),
   CONSTRAINT chk_users_wallet_address
     CHECK (wallet_address IS NULL OR wallet_address ~ '^0x[a-fA-F0-9]{40}$')
 );
