@@ -1,6 +1,5 @@
 const express = require("express");
 const documentRoutes = require("./document_routes");
-const milestoneRoutes = require("./milestone_routes");
 const logbookRoutes = require("./logbook_routes");
 const assessmentRoutes = require("./assessment_routes");
 const nftRoutes = require("./nft_routes");
@@ -12,7 +11,6 @@ router.get("/health", (req, res) => {
 });
 
 router.use("/documents", documentRoutes);
-router.use("/milestones", milestoneRoutes);
 router.use("/logbook", logbookRoutes);
 router.use("/assessments", assessmentRoutes);
 router.use("/nft", nftRoutes);
