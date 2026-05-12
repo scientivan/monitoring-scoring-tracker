@@ -5,6 +5,7 @@ Store migration files in this directory using a sortable filename format:
 - `001_create_users.sql`
 - `002_create_documents.sql`
 - `003_create_document_reviews.sql`
+- `008_create_milestone_submission_reviews.sql`
 
 Rules:
 

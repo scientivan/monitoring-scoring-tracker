@@ -399,7 +399,7 @@ paths:
 
   /api/v1/submissions/{id}/status:
     patch:
-      summary: Update submission review status
+      summary: Create a submission review entry and update latest status
       tags:
         - Submissions
       parameters:
@@ -413,16 +413,71 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SubmissionStatusUpdateInput"
+              $ref: "#/components/schemas/SubmissionReviewCreateInput"
       responses:
         "200":
-          description: Submission status updated successfully
+          description: Submission review created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SubmissionResponse"
+                $ref: "#/components/schemas/SubmissionReviewCreateResponse"
         "400":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "403":
+          description: Reviewer is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "404":
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "409":
+          description: Submission cannot be reviewed in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+
+  /api/v1/submissions/{id}/review:
+    post:
+      summary: Create a new append-only submission review entry
+      tags:
+        - Submissions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionReviewCreateInput"
+      responses:
+        "201":
+          description: Submission review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionReviewCreateResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "403":
+          description: Reviewer is not authorized
           content:
             application/json:
               schema:
@@ -911,12 +966,23 @@ components:
         status:
           type: string
           enum: [submitted, approved, rejected, needs_revision]
+        approvedBy:
+          type: string
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
         submittedAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+        latestReview:
+          oneOf:
+            - $ref: "#/components/schemas/SubmissionReview"
+            - type: "null"
 
     SubmissionCreateInput:
       type: object
@@ -940,14 +1006,55 @@ components:
           format: binary
           description: Optional PDF, JPG, PNG, or WEBP proof file. A submission must include at least one file or one link.
 
-    SubmissionStatusUpdateInput:
+    SubmissionReview:
       type: object
-      required:
-        - status
       properties:
+        id:
+          type: string
+        submissionId:
+          type: string
+        reviewerId:
+          type: string
         status:
           type: string
           enum: [approved, rejected, needs_revision]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    SubmissionReviewCreateInput:
+      type: object
+      required:
+        - reviewerId
+        - status
+      properties:
+        reviewerId:
+          type: string
+          description: Client user id authorized to review the milestone submission
+        status:
+          type: string
+          enum: [approved, rejected, needs_revision]
+        notes:
+          type: string
+
+    SubmissionReviewCreatePayload:
+      type: object
+      properties:
+        submission:
+          $ref: "#/components/schemas/Submission"
+        review:
+          $ref: "#/components/schemas/SubmissionReview"
+
+    SubmissionReviewCreateResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/SubmissionReviewCreatePayload"
+        message:
+          type: string
 
     SubmissionResponse:
       type: object

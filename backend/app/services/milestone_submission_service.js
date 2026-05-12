@@ -3,7 +3,12 @@ const milestoneRepository = require("../repositories/milestone_repo");
 const submissionRepository = require("../repositories/milestone_submission_repo");
 const eventPublisher = require("./event_publisher");
 const documentStorageService = require("./document_storage_service");
-const { notFoundError, validationError } = require("../core/api_error");
+const {
+  conflictError,
+  forbiddenError,
+  notFoundError,
+  validationError,
+} = require("../core/api_error");
 
 const allowedStatuses = ["submitted", "approved", "rejected", "needs_revision"];
 const allowedReviewStatuses = ["approved", "rejected", "needs_revision"];
@@ -125,6 +130,10 @@ async function createSubmission(payload = {}, file = null) {
     throw validationError("Field 'studentId' must match the milestone studentId");
   }
 
+  if (["completed", "cancelled", "canceled"].includes(milestone.status)) {
+    throw conflictError("Submissions cannot be uploaded to completed or cancelled milestones");
+  }
+
   const fileHash = file ? calculateSha256(file.buffer) : null;
   const { fileUrl, storagePath } = await documentStorageService.uploadSubmissionProofFile({
     milestoneId,
@@ -194,6 +203,16 @@ async function getSubmissionById(id) {
   return submission;
 }
 
+async function getSubmissionDetail(id) {
+  const submission = await getSubmissionById(id);
+  const latestReview = await submissionRepository.getLatestReviewBySubmissionId(submission.id);
+
+  return {
+    ...submission,
+    latestReview,
+  };
+}
+
 async function getSubmissionDownload(id) {
   const submission = await getSubmissionById(id);
 
@@ -209,11 +228,29 @@ async function getSubmissionDownload(id) {
   };
 }
 
-async function updateSubmissionStatus(id, payload = {}) {
+async function ensureClientReviewerCanReview(milestone, reviewerId) {
+  const reviewer = await submissionRepository.getUserById(reviewerId);
+
+  if (!reviewer) {
+    throw notFoundError(`Reviewer with id '${reviewerId}' was not found`);
+  }
+
+  if (reviewer.role !== "client") {
+    throw forbiddenError("Only users with role 'client' can review submissions");
+  }
+
+  if (milestone.employerId !== reviewer.id) {
+    throw forbiddenError("Only the milestone client can review this submission");
+  }
+}
+
+async function createSubmissionReview(id, payload = {}) {
   requireString(id, "id");
+  requireString(payload.reviewerId, "reviewerId");
   requireString(payload.status, "status");
 
   const normalizedStatus = payload.status.trim();
+  const reviewerId = payload.reviewerId.trim();
 
   if (!allowedReviewStatuses.includes(normalizedStatus)) {
     throw validationError(
@@ -222,27 +259,44 @@ async function updateSubmissionStatus(id, payload = {}) {
   }
 
   const existingSubmission = await getSubmissionById(id);
-  const updatedSubmission = await submissionRepository.updateSubmissionStatus(
-    existingSubmission.id,
-    normalizedStatus,
-  );
+  const milestone = await ensureMilestoneExists(existingSubmission.milestoneId);
+
+  await ensureClientReviewerCanReview(milestone, reviewerId);
+
+  const { review, submission: updatedSubmission } =
+    await submissionRepository.createSubmissionReviewAndUpdateStatus({
+    submissionId: existingSubmission.id,
+    reviewerId,
+    status: normalizedStatus,
+    notes: typeof payload.notes === "string" && payload.notes.trim()
+      ? payload.notes.trim()
+      : null,
+  });
 
   await eventPublisher.publishToEventLog(reviewStatusEventTypes[normalizedStatus], {
     submissionId: updatedSubmission.id,
     milestoneId: updatedSubmission.milestoneId,
     studentId: updatedSubmission.studentId,
+    reviewerId,
     previousStatus: existingSubmission.status,
     status: updatedSubmission.status,
+    reviewId: review.id,
+    approvedBy: updatedSubmission.approvedBy,
+    approvedAt: updatedSubmission.approvedAt,
     updatedAt: updatedSubmission.updatedAt,
   });
 
-  return updatedSubmission;
+  return {
+    submission: updatedSubmission,
+    review,
+  };
 }
 
 module.exports = {
   createSubmission,
   listSubmissions,
   getSubmissionById,
+  getSubmissionDetail,
   getSubmissionDownload,
-  updateSubmissionStatus,
+  createSubmissionReview,
 };

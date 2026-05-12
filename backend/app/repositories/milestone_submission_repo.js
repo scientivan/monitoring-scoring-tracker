@@ -17,8 +17,36 @@ function mapSubmissionRow(row) {
     fileHash: row.file_hash,
     links: row.links || [],
     status: row.status,
+    approvedBy: row.approved_by,
+    approvedAt: row.approved_at,
     submittedAt: row.submitted_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapSubmissionReviewRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    submissionId: row.submission_id,
+    reviewerId: row.reviewer_id,
+    status: row.status,
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
+}
+
+function mapUserRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    role: row.role,
   };
 }
 
@@ -100,17 +128,135 @@ async function getSubmissionById(id) {
   return mapSubmissionRow(result.rows[0]);
 }
 
-async function updateSubmissionStatus(id, status) {
+async function updateSubmissionStatus(id, status, approvedBy = null) {
   const query = `
     UPDATE milestone_submissions
     SET status = $1,
+        approved_by = CASE WHEN $1 = 'approved' THEN $3 ELSE NULL END,
+        approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END,
         updated_at = NOW()
     WHERE id = $2
     RETURNING *
   `;
 
-  const result = await pool.query(query, [status, id]);
+  const result = await pool.query(query, [status, id, approvedBy]);
   return mapSubmissionRow(result.rows[0]);
+}
+
+async function createSubmissionReview(payload) {
+  const query = `
+    INSERT INTO milestone_submission_reviews (
+      submission_id,
+      reviewer_id,
+      status,
+      notes
+    )
+    VALUES ($1, $2, $3, $4)
+    RETURNING *
+  `;
+
+  const values = [
+    payload.submissionId,
+    payload.reviewerId,
+    payload.status,
+    payload.notes,
+  ];
+
+  const result = await pool.query(query, values);
+  return mapSubmissionReviewRow(result.rows[0]);
+}
+
+async function createSubmissionReviewAndUpdateStatus(payload) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const reviewResult = await client.query(
+      `
+        INSERT INTO milestone_submission_reviews (
+          submission_id,
+          reviewer_id,
+          status,
+          notes
+        )
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `,
+      [
+        payload.submissionId,
+        payload.reviewerId,
+        payload.status,
+        payload.notes,
+      ],
+    );
+
+    const submissionResult = await client.query(
+      `
+        UPDATE milestone_submissions
+        SET status = $1,
+            approved_by = CASE WHEN $1 = 'approved' THEN $3 ELSE NULL END,
+            approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END,
+            updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `,
+      [
+        payload.status,
+        payload.submissionId,
+        payload.status === "approved" ? payload.reviewerId : null,
+      ],
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      review: mapSubmissionReviewRow(reviewResult.rows[0]),
+      submission: mapSubmissionRow(submissionResult.rows[0]),
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function listReviewsBySubmissionId(submissionId) {
+  const query = `
+    SELECT *
+    FROM milestone_submission_reviews
+    WHERE submission_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [submissionId]);
+  return result.rows.map(mapSubmissionReviewRow);
+}
+
+async function getLatestReviewBySubmissionId(submissionId) {
+  const query = `
+    SELECT *
+    FROM milestone_submission_reviews
+    WHERE submission_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [submissionId]);
+  return mapSubmissionReviewRow(result.rows[0]);
+}
+
+async function getUserById(id) {
+  const query = `
+    SELECT id, role
+    FROM users
+    WHERE id = $1
+    LIMIT 1
+  `;
+
+  const result = await pool.query(query, [id]);
+  return mapUserRow(result.rows[0]);
 }
 
 module.exports = {
@@ -118,4 +264,9 @@ module.exports = {
   listSubmissions,
   getSubmissionById,
   updateSubmissionStatus,
+  createSubmissionReview,
+  createSubmissionReviewAndUpdateStatus,
+  listReviewsBySubmissionId,
+  getLatestReviewBySubmissionId,
+  getUserById,
 };
