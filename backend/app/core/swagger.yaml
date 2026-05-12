@@ -477,125 +477,125 @@ paths:
               schema:
                 $ref: "#/components/schemas/StandardErrorResponse"
 
-  /api/v1/logbook:
-    post:
-      summary: Create logbook entry
-      tags:
-        - Logbook
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LogbookCreateInput"
-      responses:
-        "201":
-          description: Logbook created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LogbookResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
+  # /api/v1/logbook:
+  #   post:
+  #     summary: Create logbook entry
+  #     tags:
+  #       - Logbook
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/LogbookCreateInput"
+  #     responses:
+  #       "201":
+  #         description: Logbook created successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/LogbookResponse"
+  #       "400":
+  #         description: Validation error
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/StandardErrorResponse"
 
-  /api/v1/logbook/team/{teamId}:
-    get:
-      summary: List logbook entries by team
-      tags:
-        - Logbook
-      parameters:
-        - in: path
-          name: teamId
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Logbooks retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LogbookListResponse"
+  # /api/v1/logbook/team/{teamId}:
+  #   get:
+  #     summary: List logbook entries by team
+  #     tags:
+  #       - Logbook
+  #     parameters:
+  #       - in: path
+  #         name: teamId
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       "200":
+  #         description: Logbooks retrieved successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/LogbookListResponse"
 
-  /api/v1/logbook/team/{teamId}/latest:
-    get:
-      summary: Get latest logbook entry by team
-      tags:
-        - Logbook
-      parameters:
-        - in: path
-          name: teamId
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Latest logbook retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LogbookResponse"
+  # /api/v1/logbook/team/{teamId}/latest:
+  #   get:
+  #     summary: Get latest logbook entry by team
+  #     tags:
+  #       - Logbook
+  #     parameters:
+  #       - in: path
+  #         name: teamId
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       "200":
+  #         description: Latest logbook retrieved successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/LogbookResponse"
 
-  /api/v1/assessments:
-    post:
-      summary: Create assessment draft
-      tags:
-        - Assessments
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AssessmentCreateInput"
-      responses:
-        "201":
-          description: Assessment created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssessmentResponse"
+  # /api/v1/assessments:
+  #   post:
+  #     summary: Create assessment draft
+  #     tags:
+  #       - Assessments
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/AssessmentCreateInput"
+  #     responses:
+  #       "201":
+  #         description: Assessment created successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/AssessmentResponse"
 
-  /api/v1/assessments/{id}/lock:
-    post:
-      summary: Lock assessment and trigger NFT placeholder
-      tags:
-        - Assessments
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Assessment locked successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssessmentLockResponse"
+  # /api/v1/assessments/{id}/lock:
+  #   post:
+  #     summary: Lock assessment and trigger NFT placeholder
+  #     tags:
+  #       - Assessments
+  #     parameters:
+  #       - in: path
+  #         name: id
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       "200":
+  #         description: Assessment locked successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/AssessmentLockResponse"
 
-  /api/v1/assessments/team/{teamId}:
-    get:
-      summary: List assessments by team
-      tags:
-        - Assessments
-      parameters:
-        - in: path
-          name: teamId
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Assessments retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssessmentListResponse"
+  # /api/v1/assessments/team/{teamId}:
+  #   get:
+  #     summary: List assessments by team
+  #     tags:
+  #       - Assessments
+  #     parameters:
+  #       - in: path
+  #         name: teamId
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       "200":
+  #         description: Assessments retrieved successfully
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/AssessmentListResponse"
 
   /api/v1/nft/team/{teamId}:
     get:
