@@ -6,6 +6,12 @@ const documentStorageService = require("./document_storage_service");
 const { notFoundError, validationError } = require("../core/api_error");
 
 const allowedStatuses = ["submitted", "approved", "rejected", "needs_revision"];
+const allowedReviewStatuses = ["approved", "rejected", "needs_revision"];
+const reviewStatusEventTypes = {
+  approved: "submission_approved",
+  rejected: "submission_rejected",
+  needs_revision: "submission_needs_revision",
+};
 
 function requireString(value, fieldName) {
   if (!value || typeof value !== "string" || !value.trim()) {
@@ -85,6 +91,12 @@ function validateUploadedProofFile(file) {
   }
 }
 
+function requireSubmissionProof(file, links) {
+  if (!file && links.length === 0) {
+    throw validationError("Submission proof requires at least one file or link");
+  }
+}
+
 async function ensureMilestoneExists(milestoneId) {
   const milestone = await milestoneRepository.getMilestoneById(milestoneId);
 
@@ -106,6 +118,7 @@ async function createSubmission(payload = {}, file = null) {
   const links = normalizeLinks(payload.links);
 
   validateUploadedProofFile(file);
+  requireSubmissionProof(file, links);
   const milestone = await ensureMilestoneExists(milestoneId);
 
   if (milestone.studentId !== studentId) {
@@ -132,7 +145,7 @@ async function createSubmission(payload = {}, file = null) {
       status: "submitted",
     });
 
-    await eventPublisher.publishToEventLog("submission_created", {
+    await eventPublisher.publishToEventLog("submission_posted", {
       submissionId: submission.id,
       milestoneId: submission.milestoneId,
       employerId: milestone.employerId,
@@ -196,9 +209,40 @@ async function getSubmissionDownload(id) {
   };
 }
 
+async function updateSubmissionStatus(id, payload = {}) {
+  requireString(id, "id");
+  requireString(payload.status, "status");
+
+  const normalizedStatus = payload.status.trim();
+
+  if (!allowedReviewStatuses.includes(normalizedStatus)) {
+    throw validationError(
+      "Field 'status' must be one of: approved, rejected, needs_revision",
+    );
+  }
+
+  const existingSubmission = await getSubmissionById(id);
+  const updatedSubmission = await submissionRepository.updateSubmissionStatus(
+    existingSubmission.id,
+    normalizedStatus,
+  );
+
+  await eventPublisher.publishToEventLog(reviewStatusEventTypes[normalizedStatus], {
+    submissionId: updatedSubmission.id,
+    milestoneId: updatedSubmission.milestoneId,
+    studentId: updatedSubmission.studentId,
+    previousStatus: existingSubmission.status,
+    status: updatedSubmission.status,
+    updatedAt: updatedSubmission.updatedAt,
+  });
+
+  return updatedSubmission;
+}
+
 module.exports = {
   createSubmission,
   listSubmissions,
   getSubmissionById,
   getSubmissionDownload,
+  updateSubmissionStatus,
 };

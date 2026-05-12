@@ -100,8 +100,22 @@ async function getSubmissionById(id) {
   return mapSubmissionRow(result.rows[0]);
 }
 
+async function updateSubmissionStatus(id, status) {
+  const query = `
+    UPDATE milestone_submissions
+    SET status = $1,
+        updated_at = NOW()
+    WHERE id = $2
+    RETURNING *
+  `;
+
+  const result = await pool.query(query, [status, id]);
+  return mapSubmissionRow(result.rows[0]);
+}
+
 module.exports = {
   createSubmission,
   listSubmissions,
   getSubmissionById,
+  updateSubmissionStatus,
 };

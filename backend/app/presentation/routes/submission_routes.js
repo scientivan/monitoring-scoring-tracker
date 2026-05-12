@@ -51,6 +51,19 @@ router.get("/:id/download", async (req, res) => {
   }
 });
 
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const submission = await submissionService.updateSubmissionStatus(req.params.id, req.body);
+
+    res.status(200).json({
+      data: submission,
+      message: "Submission status updated successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const submission = await submissionService.getSubmissionById(req.params.id);
