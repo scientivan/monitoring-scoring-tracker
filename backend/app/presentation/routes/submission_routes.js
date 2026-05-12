@@ -51,19 +51,6 @@ router.get("/:id/download", async (req, res) => {
   }
 });
 
-router.patch("/:id/status", async (req, res) => {
-  try {
-    const review = await submissionService.createSubmissionReview(req.params.id, req.body);
-
-    res.status(200).json({
-      data: review,
-      message: "Submission review created successfully",
-    });
-  } catch (error) {
-    res.status(error.statusCode || 500).json(buildErrorResponse(error));
-  }
-});
-
 router.post("/:id/review", async (req, res) => {
   try {
     const review = await submissionService.createSubmissionReview(req.params.id, req.body);

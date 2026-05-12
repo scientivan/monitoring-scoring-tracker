@@ -265,6 +265,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StandardErrorResponse"
+        "409":
+          description: Submission cannot be created in its current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
     patch:
       summary: Update an existing milestone
       tags:
@@ -389,58 +395,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SubmissionResponse"
+                $ref: "#/components/schemas/SubmissionDetailResponse"
         "404":
           description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-
-  /api/v1/submissions/{id}/status:
-    patch:
-      summary: Create a submission review entry and update latest status
-      tags:
-        - Submissions
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SubmissionReviewCreateInput"
-      responses:
-        "200":
-          description: Submission review created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SubmissionReviewCreateResponse"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "403":
-          description: Reviewer is not authorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "404":
-          description: Submission not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StandardErrorResponse"
-        "409":
-          description: Submission cannot be reviewed in its current state
           content:
             application/json:
               schema:
@@ -484,6 +441,12 @@ paths:
                 $ref: "#/components/schemas/StandardErrorResponse"
         "404":
           description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorResponse"
+        "409":
+          description: Submission cannot be reviewed in its current state
           content:
             application/json:
               schema:
@@ -979,10 +942,16 @@ components:
         updatedAt:
           type: string
           format: date-time
-        latestReview:
-          oneOf:
-            - $ref: "#/components/schemas/SubmissionReview"
-            - type: "null"
+
+    SubmissionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            latestReview:
+              oneOf:
+                - $ref: "#/components/schemas/SubmissionReview"
+                - type: "null"
 
     SubmissionCreateInput:
       type: object
@@ -1061,6 +1030,14 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Submission"
+        message:
+          type: string
+
+    SubmissionDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/SubmissionDetail"
         message:
           type: string
 
