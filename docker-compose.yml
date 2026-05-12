@@ -17,8 +17,15 @@ services:
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
       - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE:-tracker.events}
+      - RABBITMQ_EXCHANGE_TYPE=${RABBITMQ_EXCHANGE_TYPE:-topic}
+      - RABBITMQ_ROUTING_PREFIX=${RABBITMQ_ROUTING_PREFIX:-tracker}
+      - RABBITMQ_PUBLISH_RETRIES=${RABBITMQ_PUBLISH_RETRIES:-3}
+      - RABBITMQ_PUBLISH_RETRY_DELAY_MS=${RABBITMQ_PUBLISH_RETRY_DELAY_MS:-200}
     depends_on:
       - db
+      - rabbitmq
   nginx:
     image: nginx:alpine
     ports:
@@ -56,6 +63,22 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
