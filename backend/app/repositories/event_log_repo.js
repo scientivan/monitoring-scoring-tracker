@@ -35,6 +35,19 @@ async function createEventLog(payload) {
   return mapEventLogRow(result.rows[0]);
 }
 
+async function updateEventLogStatus(id, status) {
+  const query = `
+    UPDATE event_log
+    SET status = $1
+    WHERE id = $2
+    RETURNING *
+  `;
+
+  const result = await pool.query(query, [status, id]);
+  return mapEventLogRow(result.rows[0]);
+}
+
 module.exports = {
   createEventLog,
+  updateEventLogStatus,
 };
