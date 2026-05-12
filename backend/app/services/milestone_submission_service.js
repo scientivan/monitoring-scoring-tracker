@@ -134,6 +134,15 @@ async function createSubmission(payload = {}, file = null) {
     throw conflictError("Submissions cannot be uploaded to completed or cancelled milestones");
   }
 
+  const existingSubmission = await submissionRepository.getSubmissionByMilestoneAndStudent(
+    milestoneId,
+    studentId,
+  );
+
+  if (existingSubmission) {
+    throw conflictError("A submission for this milestone and student already exists");
+  }
+
   const fileHash = file ? calculateSha256(file.buffer) : null;
   const { fileUrl, storagePath } = await documentStorageService.uploadSubmissionProofFile({
     milestoneId,
@@ -167,6 +176,11 @@ async function createSubmission(payload = {}, file = null) {
     return submission;
   } catch (error) {
     await documentStorageService.removeDocumentFile(storagePath);
+
+    if (error.code === "23505") {
+      throw conflictError("A submission for this milestone and student already exists");
+    }
+
     throw error;
   }
 }
@@ -259,19 +273,28 @@ async function createSubmissionReview(id, payload = {}) {
   }
 
   const existingSubmission = await getSubmissionById(id);
+
+  if (existingSubmission.status === "approved") {
+    throw conflictError("Approved submissions cannot be reviewed again");
+  }
+
   const milestone = await ensureMilestoneExists(existingSubmission.milestoneId);
 
   await ensureClientReviewerCanReview(milestone, reviewerId);
 
   const { review, submission: updatedSubmission } =
     await submissionRepository.createSubmissionReviewAndUpdateStatus({
-    submissionId: existingSubmission.id,
-    reviewerId,
-    status: normalizedStatus,
-    notes: typeof payload.notes === "string" && payload.notes.trim()
-      ? payload.notes.trim()
-      : null,
-  });
+      submissionId: existingSubmission.id,
+      reviewerId,
+      status: normalizedStatus,
+      notes: typeof payload.notes === "string" && payload.notes.trim()
+        ? payload.notes.trim()
+        : null,
+    });
+
+  if (!review || !updatedSubmission) {
+    throw conflictError("Approved submissions cannot be reviewed again");
+  }
 
   await eventPublisher.publishToEventLog(reviewStatusEventTypes[normalizedStatus], {
     submissionId: updatedSubmission.id,

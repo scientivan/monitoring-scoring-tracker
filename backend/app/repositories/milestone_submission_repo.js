@@ -128,42 +128,18 @@ async function getSubmissionById(id) {
   return mapSubmissionRow(result.rows[0]);
 }
 
-async function updateSubmissionStatus(id, status, approvedBy = null) {
+async function getSubmissionByMilestoneAndStudent(milestoneId, studentId) {
   const query = `
-    UPDATE milestone_submissions
-    SET status = $1,
-        approved_by = CASE WHEN $1 = 'approved' THEN $3 ELSE NULL END,
-        approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END,
-        updated_at = NOW()
-    WHERE id = $2
-    RETURNING *
+    SELECT *
+    FROM milestone_submissions
+    WHERE milestone_id = $1
+      AND student_id = $2
+    ORDER BY submitted_at DESC
+    LIMIT 1
   `;
 
-  const result = await pool.query(query, [status, id, approvedBy]);
+  const result = await pool.query(query, [milestoneId, studentId]);
   return mapSubmissionRow(result.rows[0]);
-}
-
-async function createSubmissionReview(payload) {
-  const query = `
-    INSERT INTO milestone_submission_reviews (
-      submission_id,
-      reviewer_id,
-      status,
-      notes
-    )
-    VALUES ($1, $2, $3, $4)
-    RETURNING *
-  `;
-
-  const values = [
-    payload.submissionId,
-    payload.reviewerId,
-    payload.status,
-    payload.notes,
-  ];
-
-  const result = await pool.query(query, values);
-  return mapSubmissionReviewRow(result.rows[0]);
 }
 
 async function createSubmissionReviewAndUpdateStatus(payload) {
@@ -194,11 +170,12 @@ async function createSubmissionReviewAndUpdateStatus(payload) {
     const submissionResult = await client.query(
       `
         UPDATE milestone_submissions
-        SET status = $1,
-            approved_by = CASE WHEN $1 = 'approved' THEN $3 ELSE NULL END,
-            approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END,
+        SET status = $1::varchar,
+            approved_by = CASE WHEN $1::varchar = 'approved' THEN $3::uuid ELSE NULL END,
+            approved_at = CASE WHEN $1::varchar = 'approved' THEN NOW() ELSE NULL END,
             updated_at = NOW()
         WHERE id = $2
+          AND status <> 'approved'
         RETURNING *
       `,
       [
@@ -207,6 +184,14 @@ async function createSubmissionReviewAndUpdateStatus(payload) {
         payload.status === "approved" ? payload.reviewerId : null,
       ],
     );
+
+    if (submissionResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return {
+        review: null,
+        submission: null,
+      };
+    }
 
     await client.query("COMMIT");
 
@@ -263,8 +248,7 @@ module.exports = {
   createSubmission,
   listSubmissions,
   getSubmissionById,
-  updateSubmissionStatus,
-  createSubmissionReview,
+  getSubmissionByMilestoneAndStudent,
   createSubmissionReviewAndUpdateStatus,
   listReviewsBySubmissionId,
   getLatestReviewBySubmissionId,
