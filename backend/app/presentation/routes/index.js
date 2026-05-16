@@ -3,6 +3,7 @@ const documentRoutes = require("./document_routes");
 const logbookRoutes = require("./logbook_routes");
 const assessmentRoutes = require("./assessment_routes");
 const nftRoutes = require("./nft_routes");
+const sertifikatRoutes = require("./sertifikat_routes");
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/documents", documentRoutes);
 router.use("/logbook", logbookRoutes);
 router.use("/assessments", assessmentRoutes);
 router.use("/nft", nftRoutes);
+router.use("/sertifikat", sertifikatRoutes);
 
 module.exports = router;
