@@ -13,7 +13,7 @@ function requireString(value, fieldName) {
   }
 }
 
-function createAssessment(payload = {}) {
+async function createAssessment(payload = {}) {
   requireString(payload.teamId, "teamId");
   requireString(payload.graderId, "graderId");
 
@@ -46,8 +46,8 @@ async function listAssessmentsByTeam(teamId) {
     return { data: cached, source: "cache" };
   }
 
-  // 2. Cache miss -> ambil dari source of truth (repository).
-  const data = assessmentRepository.listAssessmentsByTeam(id);
+  // 2. Cache miss -> ambil dari source of truth (PostgreSQL via Prisma).
+  const data = await assessmentRepository.listAssessmentsByTeam(id);
 
   // 3. Isi cache untuk request berikutnya. TTL dipakai agar data tidak
   //    basi selamanya (cache otomatis kedaluwarsa setelah 60 detik).
@@ -56,10 +56,10 @@ async function listAssessmentsByTeam(teamId) {
   return { data, source: "repository" };
 }
 
-function lockAssessment(id) {
+async function lockAssessment(id) {
   requireString(id, "id");
 
-  const lockedAssessment = assessmentRepository.lockAssessment(id.trim());
+  const lockedAssessment = await assessmentRepository.lockAssessment(id.trim());
 
   if (!lockedAssessment) {
     throw notFoundError(`Assessment with id '${id}' was not found`);
@@ -71,7 +71,7 @@ function lockAssessment(id) {
     finalScore: lockedAssessment.finalScore,
   });
 
-  const nftRecord = nftService.createMockNftFromAssessment(lockedAssessment);
+  const nftRecord = await nftService.createMockNftFromAssessment(lockedAssessment);
 
   return {
     assessment: lockedAssessment,

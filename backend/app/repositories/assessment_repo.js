@@ -1,45 +1,43 @@
-const assessments = [];
-let nextId = 1;
+const prisma = require("../core/prisma");
 
 function createAssessment(payload) {
-  const assessment = {
-    id: `assessment-${nextId++}`,
-    teamId: payload.teamId,
-    graderId: payload.graderId,
-    scoreArchitecture: payload.scoreArchitecture || null,
-    scoreImplementation: payload.scoreImplementation || null,
-    scoreDocumentation: payload.scoreDocumentation || null,
-    scorePresentation: payload.scorePresentation || null,
-    finalScore: payload.finalScore,
-    notes: payload.notes || null,
-    walletAddress: payload.walletAddress || null,
-    isLocked: false,
-    createdAt: new Date().toISOString(),
-  };
-
-  assessments.push(assessment);
-
-  return assessment;
+  return prisma.assessment.create({
+    data: {
+      teamId: payload.teamId,
+      graderId: payload.graderId,
+      scoreArchitecture: payload.scoreArchitecture ?? null,
+      scoreImplementation: payload.scoreImplementation ?? null,
+      scoreDocumentation: payload.scoreDocumentation ?? null,
+      scorePresentation: payload.scorePresentation ?? null,
+      finalScore: payload.finalScore,
+      notes: payload.notes ?? null,
+      walletAddress: payload.walletAddress ?? null,
+    },
+  });
 }
 
 function getAssessmentById(id) {
-  return assessments.find((assessment) => assessment.id === id) || null;
+  return prisma.assessment.findUnique({ where: { id } });
 }
 
 function listAssessmentsByTeam(teamId) {
-  return assessments.filter((assessment) => assessment.teamId === teamId);
+  return prisma.assessment.findMany({
+    where: { teamId },
+    orderBy: { createdAt: "asc" },
+  });
 }
 
-function lockAssessment(id) {
-  const assessment = getAssessmentById(id);
+async function lockAssessment(id) {
+  const existing = await prisma.assessment.findUnique({ where: { id } });
 
-  if (!assessment) {
+  if (!existing) {
     return null;
   }
 
-  assessment.isLocked = true;
-
-  return assessment;
+  return prisma.assessment.update({
+    where: { id },
+    data: { isLocked: true },
+  });
 }
 
 module.exports = {

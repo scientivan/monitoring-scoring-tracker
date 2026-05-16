@@ -179,6 +179,7 @@ services:
       DB_PASSWORD: ${AUDIT_DB_PASS:-kel4}
       DB_NAME: ${AUDIT_DB_NAME:-kel4}
       RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+      DATABASE_URL: postgresql://${AUDIT_DB_USER:-kel4}:${AUDIT_DB_PASS:-kel4}@db-audit:5432/${AUDIT_DB_NAME:-kel4}
       REDIS_URL: redis://redis-main:6379
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
@@ -253,3 +254,61 @@ volumes:
   match_data:
   audit_data:
   notify_data:
+
+
+
+/home/map/sandbox/arsitektur-perangkat-lunak-2026/nexus-svc-group/docker-compose.yml
+/home/map/sandbox/arsitektur-perangkat-lunak-2026/nexus-svc-group
+
+ cat /home/map/sandbox/arsitektur-perangkat-lunak-2026/nexus-svc-group/docker-compose.yml
+version: '3.8'
+
+services:
+  auth-svc:
+    image: alpine
+    container_name: SVC-auth
+    command: sleep infinity
+    ports:
+      - "8081:8080" # Luar panggil 8081, Dalam app jalan di 8080
+    networks:
+      - my-network
+
+  bidding-svc:
+    image: alpine
+    container_name: SVC-bidding
+    command: sleep infinity
+    ports:
+      - "8082:8080"
+    networks:
+      - my-network
+
+  match-svc:
+    image: alpine
+    container_name: SVC-match
+    command: sleep infinity
+    ports:
+      - "8083:8080"
+    networks:
+      - my-network
+
+  audit-svc:
+    image: alpine
+    container_name: SVC-audit
+    command: sleep infinity
+    ports:
+      - "8084:8080"
+    networks:
+      - my-network
+
+  notify-svc:
+    image: alpine
+    container_name: SVC-notify
+    command: sleep infinity
+    ports:
+      - "8085:8080"
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge

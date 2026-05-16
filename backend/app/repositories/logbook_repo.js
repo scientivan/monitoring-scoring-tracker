@@ -1,30 +1,31 @@
-const logbooks = [];
-let nextId = 1;
+const prisma = require("../core/prisma");
 
 function createLogbook(payload) {
-  const logbook = {
-    id: `logbook-${nextId++}`,
-    teamId: payload.teamId,
-    authorId: payload.authorId,
-    sprintNumber: payload.sprintNumber || null,
-    status: payload.status,
-    description: payload.description,
-    blockers: payload.blockers || null,
-    createdAt: new Date().toISOString(),
-  };
-
-  logbooks.push(logbook);
-
-  return logbook;
+  return prisma.logbook.create({
+    data: {
+      teamId: payload.teamId,
+      authorId: payload.authorId,
+      sprintNumber: payload.sprintNumber ?? null,
+      status: payload.status,
+      description: payload.description,
+      blockers: payload.blockers ?? null,
+    },
+  });
 }
 
 function listLogbooksByTeam(teamId) {
-  return logbooks.filter((logbook) => logbook.teamId === teamId);
+  return prisma.logbook.findMany({
+    where: { teamId },
+    orderBy: { createdAt: "asc" },
+  });
 }
 
 function getLatestLogbookByTeam(teamId) {
-  const teamLogbooks = listLogbooksByTeam(teamId);
-  return teamLogbooks[teamLogbooks.length - 1] || null;
+  // Logbook terbaru = createdAt paling besar.
+  return prisma.logbook.findFirst({
+    where: { teamId },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 module.exports = {

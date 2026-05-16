@@ -2,7 +2,8 @@ services:
   backend:
     build: ./backend
     ports:
-      - "3300:3300"
+      # 8084 = port host kelompok (audit/kel-4); 8080 = port container (disepakati semua tim)
+      - "8084:8080"
     restart: always
     environment:
       - NODE_ENV=production
@@ -11,6 +12,7 @@ services:
       - DB_USER=kel4
       - DB_PASSWORD=kel4
       - DB_NAME=kel4
+      - DATABASE_URL=postgresql://kel4:kel4@db:5432/kel4
       - REDIS_URL=redis://redis:6379
     depends_on:
       - db

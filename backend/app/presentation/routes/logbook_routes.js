@@ -4,9 +4,9 @@ const { buildErrorResponse } = require("../../core/api_error");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const logbook = logbookService.createLogbook(req.body);
+    const logbook = await logbookService.createLogbook(req.body);
 
     res.status(201).json({
       data: logbook,
@@ -17,9 +17,11 @@ router.post("/", (req, res) => {
   }
 });
 
-router.get("/team/:teamId/latest", (req, res) => {
+router.get("/team/:teamId/latest", async (req, res) => {
   try {
-    const latestLogbook = logbookService.getLatestLogbookByTeam(req.params.teamId);
+    const latestLogbook = await logbookService.getLatestLogbookByTeam(
+      req.params.teamId
+    );
 
     res.status(200).json({
       data: latestLogbook,
@@ -30,9 +32,9 @@ router.get("/team/:teamId/latest", (req, res) => {
   }
 });
 
-router.get("/team/:teamId", (req, res) => {
+router.get("/team/:teamId", async (req, res) => {
   try {
-    const logbooks = logbookService.listLogbooksByTeam(req.params.teamId);
+    const logbooks = await logbookService.listLogbooksByTeam(req.params.teamId);
 
     res.status(200).json({
       data: logbooks,

@@ -12,12 +12,12 @@ function listNftsByTeam(teamId) {
   return nftRepository.listNftsByTeam(teamId.trim());
 }
 
-function verifyNft(id) {
+async function verifyNft(id) {
   if (!id || typeof id !== "string" || !id.trim()) {
     throw validationError("Field 'id' is required");
   }
 
-  const nftRecord = nftRepository.getNftById(id.trim());
+  const nftRecord = await nftRepository.getNftById(id.trim());
 
   if (!nftRecord) {
     throw notFoundError(`NFT with id '${id}' was not found`);

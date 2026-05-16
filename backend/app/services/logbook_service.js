@@ -42,10 +42,10 @@ function listLogbooksByTeam(teamId) {
   return logbookRepository.listLogbooksByTeam(teamId.trim());
 }
 
-function getLatestLogbookByTeam(teamId) {
+async function getLatestLogbookByTeam(teamId) {
   requireString(teamId, "teamId");
 
-  const latestLogbook = logbookRepository.getLatestLogbookByTeam(teamId.trim());
+  const latestLogbook = await logbookRepository.getLatestLogbookByTeam(teamId.trim());
 
   if (!latestLogbook) {
     throw notFoundError(`No logbook entries found for team '${teamId}'`);

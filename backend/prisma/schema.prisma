@@ -1,0 +1,76 @@
+// Skema database untuk service Monitoring & Scoring (svc-audit).
+// Migrasi dijalankan otomatis saat container start (lihat docker-entrypoint.sh).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assessment {
+  id                  String   @id @default(cuid())
+  teamId              String
+  graderId            String
+  scoreArchitecture   Float?
+  scoreImplementation Float?
+  scoreDocumentation  Float?
+  scorePresentation   Float?
+  finalScore          Float
+  notes               String?
+  walletAddress       String?
+  isLocked            Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  nftRecords NftRecord[]
+
+  @@index([teamId])
+}
+
+model Logbook {
+  id           String   @id @default(cuid())
+  teamId       String
+  authorId     String
+  sprintNumber Int?
+  status       String
+  description  String
+  blockers     String?
+  createdAt    DateTime @default(now())
+
+  @@index([teamId])
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  teamId      String
+  uploaderId  String
+  fileUrl     String
+  fileName    String
+  fileType    String
+  fileSize    Int
+  fileHash    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([teamId])
+}
+
+model NftRecord {
+  id              String   @id @default(cuid())
+  assessmentId    String
+  teamId          String
+  walletAddress   String
+  contractAddress String
+  tokenId         String
+  txHash          String
+  network         String
+  metadataUri     String
+  mintedAt        DateTime @default(now())
+  verifyStatus    String   @default("mock_verified")
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id])
+
+  @@index([teamId])
+}

@@ -1,32 +1,29 @@
-const nftRecords = [];
-let nextId = 1;
+const prisma = require("../core/prisma");
 
 function createNftRecord(payload) {
-  const nftRecord = {
-    id: `nft-${nextId++}`,
-    assessmentId: payload.assessmentId,
-    teamId: payload.teamId,
-    walletAddress: payload.walletAddress,
-    contractAddress: payload.contractAddress,
-    tokenId: payload.tokenId,
-    txHash: payload.txHash,
-    network: payload.network,
-    metadataUri: payload.metadataUri,
-    mintedAt: new Date().toISOString(),
-    verifyStatus: "mock_verified",
-  };
-
-  nftRecords.push(nftRecord);
-
-  return nftRecord;
+  return prisma.nftRecord.create({
+    data: {
+      assessmentId: payload.assessmentId,
+      teamId: payload.teamId,
+      walletAddress: payload.walletAddress,
+      contractAddress: payload.contractAddress,
+      tokenId: payload.tokenId,
+      txHash: payload.txHash,
+      network: payload.network,
+      metadataUri: payload.metadataUri,
+    },
+  });
 }
 
 function listNftsByTeam(teamId) {
-  return nftRecords.filter((record) => record.teamId === teamId);
+  return prisma.nftRecord.findMany({
+    where: { teamId },
+    orderBy: { mintedAt: "asc" },
+  });
 }
 
 function getNftById(id) {
-  return nftRecords.find((record) => record.id === id) || null;
+  return prisma.nftRecord.findUnique({ where: { id } });
 }
 
 module.exports = {

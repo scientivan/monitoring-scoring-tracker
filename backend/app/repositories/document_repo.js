@@ -1,31 +1,29 @@
-const documents = [];
-let nextId = 1;
+const prisma = require("../core/prisma");
 
 function createDocument(payload) {
-  const document = {
-    id: `document-${nextId++}`,
-    teamId: payload.teamId,
-    uploaderId: payload.uploaderId,
-    fileUrl: payload.fileUrl,
-    fileName: payload.fileName,
-    fileType: payload.fileType,
-    fileSize: payload.fileSize,
-    fileHash: payload.fileHash,
-    description: payload.description || null,
-    createdAt: new Date().toISOString(),
-  };
-
-  documents.push(document);
-
-  return document;
+  return prisma.document.create({
+    data: {
+      teamId: payload.teamId,
+      uploaderId: payload.uploaderId,
+      fileUrl: payload.fileUrl,
+      fileName: payload.fileName,
+      fileType: payload.fileType,
+      fileSize: payload.fileSize,
+      fileHash: payload.fileHash,
+      description: payload.description ?? null,
+    },
+  });
 }
 
 function listDocumentsByTeam(teamId) {
-  return documents.filter((document) => document.teamId === teamId);
+  return prisma.document.findMany({
+    where: { teamId },
+    orderBy: { createdAt: "asc" },
+  });
 }
 
 function getDocumentById(id) {
-  return documents.find((document) => document.id === id) || null;
+  return prisma.document.findUnique({ where: { id } });
 }
 
 module.exports = {

@@ -4,9 +4,9 @@ const { buildErrorResponse } = require("../../core/api_error");
 
 const router = express.Router();
 
-router.get("/team/:teamId", (req, res) => {
+router.get("/team/:teamId", async (req, res) => {
   try {
-    const nftRecords = nftService.listNftsByTeam(req.params.teamId);
+    const nftRecords = await nftService.listNftsByTeam(req.params.teamId);
 
     res.status(200).json({
       data: nftRecords,
@@ -17,9 +17,9 @@ router.get("/team/:teamId", (req, res) => {
   }
 });
 
-router.get("/:id/verify", (req, res) => {
+router.get("/:id/verify", async (req, res) => {
   try {
-    const result = nftService.verifyNft(req.params.id);
+    const result = await nftService.verifyNft(req.params.id);
 
     res.status(200).json({
       data: result,

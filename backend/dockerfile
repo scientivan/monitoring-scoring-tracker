@@ -1,5 +1,5 @@
 # versi node.js yang ringan
-FROM node:18-alpine 
+FROM node:18-alpine
 
 # direktori backend sebagai rootnya (ketika di run)
 WORKDIR /app
@@ -8,11 +8,18 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# copy skema Prisma lalu generate Prisma Client (butuh sebelum copy kode lain)
+COPY prisma ./prisma
+RUN npx prisma generate
+
 # copy seluruh code backend
 COPY . .
 
-# init port untuk dipake backend
-EXPOSE 3300
+# entrypoint: jalankan migrasi skema otomatis sebelum start app
+RUN chmod +x docker-entrypoint.sh
 
-# perinta untuk ngerun backend
-CMD ["npm", "start"]
+# init port untuk dipake backend (cocok dengan gateway & compose integrasi)
+EXPOSE 8080
+
+# migrasi skema DB otomatis -> lalu jalankan server
+CMD ["./docker-entrypoint.sh"]
