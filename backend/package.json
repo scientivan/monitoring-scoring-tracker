@@ -21,6 +21,7 @@
   "homepage": "https://github.com/scientivan/monitoring-scoring-tracker#readme",
   "dependencies": {
     "express": "^5.2.1",
+    "ioredis": "^5.10.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"

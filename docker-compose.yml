@@ -11,8 +11,10 @@ services:
       - DB_USER=kel4
       - DB_PASSWORD=kel4
       - DB_NAME=kel4
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - db
+      - redis
   nginx:
     image: nginx:alpine
     ports:
@@ -39,6 +41,17 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4

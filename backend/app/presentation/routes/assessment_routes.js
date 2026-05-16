@@ -30,12 +30,15 @@ router.post("/:id/lock", (req, res) => {
   }
 });
 
-router.get("/team/:teamId", (req, res) => {
+router.get("/team/:teamId", async (req, res) => {
   try {
-    const assessments = assessmentService.listAssessmentsByTeam(req.params.teamId);
+    const { data, source } = await assessmentService.listAssessmentsByTeam(
+      req.params.teamId
+    );
 
     res.status(200).json({
-      data: assessments,
+      data,
+      source, // "cache" = dari Redis, "repository" = dari DB
       message: "Assessments retrieved successfully",
     });
   } catch (error) {

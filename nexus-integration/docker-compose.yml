@@ -1,0 +1,255 @@
+# ============================================================
+#  NEXUS - Master Integration Compose
+#  Menyatukan 5 microservices + infra bersama (RabbitMQ, Redis)
+#  + 1 API Gateway sebagai pintu masuk tunggal.
+#
+#  Cara pakai:
+#    1. Copy .env.example -> .env, isi nilainya.
+#    2. Pastikan semua image sudah di-push ke Docker Hub
+#       (atau pakai docker-compose.build.yml untuk build dari source).
+#    3. docker compose up -d
+#    4. Buka http://localhost  (gateway)  |  RabbitMQ UI: http://localhost:15672
+# ============================================================
+
+services:
+
+  # ---------- API GATEWAY (pintu masuk tunggal) ----------
+  gateway:
+    image: nginx:alpine
+    container_name: nexus-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - svc-auth
+      - svc-bidding
+      - svc-match
+      - svc-audit
+      - svc-notify
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  # ---------- INFRA BERSAMA ----------
+  rabbit-main:
+    image: rabbitmq:3-management
+    container_name: nexus-rabbit-main
+    ports:
+      - "5672:5672"    # protokol AMQP (dipakai antar service)
+      - "15672:15672"  # dashboard web (untuk demo: tunjukkan pesan masuk)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-guest}
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis-main:
+    image: redis:latest
+    container_name: nexus-redis-main
+    ports:
+      - "6379:6379"
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  # ---------- SERVICE: AUTH / IDENTITY & SSO ----------
+  svc-auth:
+    image: ${AUTH_IMAGE:-alpine}   # ganti ke image Docker Hub tim auth
+    container_name: SVC-auth
+    ports:
+      - "8081:8080"
+    environment:
+      DB_HOST: db-auth
+      DB_PORT: 5432
+      DB_USER: ${AUTH_DB_USER:-auth}
+      DB_PASSWORD: ${AUTH_DB_PASS:-auth}
+      DB_NAME: ${AUTH_DB_NAME:-auth}
+      RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+      REDIS_URL: redis://redis-main:6379
+    depends_on:
+      db-auth: { condition: service_healthy }
+      rabbit-main: { condition: service_healthy }
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  db-auth:
+    image: postgres:15-alpine
+    container_name: DB-auth-postgres
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER:-auth}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASS:-auth}
+      POSTGRES_DB: ${AUTH_DB_NAME:-auth}
+    ports: ["5431:5432"]
+    volumes: ["auth_data:/var/lib/postgresql/data"]
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-auth}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------- SERVICE: BIDDING ----------
+  svc-bidding:
+    image: ${BIDDING_IMAGE:-alpine}
+    container_name: SVC-bidding
+    ports:
+      - "8082:8080"
+    environment:
+      DB_HOST: db-bidding
+      DB_PORT: 5432
+      DB_USER: ${BIDDING_DB_USER:-bidding}
+      DB_PASSWORD: ${BIDDING_DB_PASS:-bidding}
+      DB_NAME: ${BIDDING_DB_NAME:-bidding}
+      RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+    depends_on:
+      db-bidding: { condition: service_healthy }
+      rabbit-main: { condition: service_healthy }
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  db-bidding:
+    image: postgres:15-alpine
+    container_name: DB-bidding-postgres
+    environment:
+      POSTGRES_USER: ${BIDDING_DB_USER:-bidding}
+      POSTGRES_PASSWORD: ${BIDDING_DB_PASS:-bidding}
+      POSTGRES_DB: ${BIDDING_DB_NAME:-bidding}
+    ports: ["5432:5432"]
+    volumes: ["bidding_data:/var/lib/postgresql/data"]
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BIDDING_DB_USER:-bidding}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------- SERVICE: MATCH / TEAM-MATCHING ----------
+  svc-match:
+    image: ${MATCH_IMAGE:-alpine}
+    container_name: SVC-match
+    ports:
+      - "8083:8080"
+    environment:
+      DB_HOST: db-match
+      DB_PORT: 5432
+      DB_USER: ${MATCH_DB_USER:-match}
+      DB_PASSWORD: ${MATCH_DB_PASS:-match}
+      DB_NAME: ${MATCH_DB_NAME:-match}
+      RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+    depends_on:
+      db-match: { condition: service_healthy }
+      rabbit-main: { condition: service_healthy }
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  db-match:
+    image: postgres:15-alpine
+    container_name: DB-match-postgres
+    environment:
+      POSTGRES_USER: ${MATCH_DB_USER:-match}
+      POSTGRES_PASSWORD: ${MATCH_DB_PASS:-match}
+      POSTGRES_DB: ${MATCH_DB_NAME:-match}
+    ports: ["5433:5432"]
+    volumes: ["match_data:/var/lib/postgresql/data"]
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MATCH_DB_USER:-match}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------- SERVICE: AUDIT / MONITORING-SCORING-TRACKER ----------
+  # Ini service kamu - image sudah ada di Docker Hub.
+  svc-audit:
+    image: ${AUDIT_IMAGE:-scientivan/monitoring-scoring-tracker:latest}
+    container_name: SVC-audit
+    ports:
+      - "8084:8080"
+    environment:
+      DB_HOST: db-audit
+      DB_PORT: 5432
+      DB_USER: ${AUDIT_DB_USER:-kel4}
+      DB_PASSWORD: ${AUDIT_DB_PASS:-kel4}
+      DB_NAME: ${AUDIT_DB_NAME:-kel4}
+      RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+      REDIS_URL: redis://redis-main:6379
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-documents}
+    depends_on:
+      db-audit: { condition: service_healthy }
+      rabbit-main: { condition: service_healthy }
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  db-audit:
+    image: postgres:15-alpine
+    container_name: DB-audit-postgres
+    environment:
+      POSTGRES_USER: ${AUDIT_DB_USER:-kel4}
+      POSTGRES_PASSWORD: ${AUDIT_DB_PASS:-kel4}
+      POSTGRES_DB: ${AUDIT_DB_NAME:-kel4}
+    ports: ["5434:5432"]
+    volumes: ["audit_data:/var/lib/postgresql/data"]
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUDIT_DB_USER:-kel4}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------- SERVICE: NOTIFY / NOTIFICATION ----------
+  svc-notify:
+    image: ${NOTIFY_IMAGE:-alpine}
+    container_name: SVC-notify
+    ports:
+      - "8085:8080"
+    environment:
+      DB_HOST: db-notify
+      DB_PORT: 5432
+      DB_USER: ${NOTIFY_DB_USER:-notify}
+      DB_PASSWORD: ${NOTIFY_DB_PASS:-notify}
+      DB_NAME: ${NOTIFY_DB_NAME:-notify}
+      # notify-service adalah CONSUMER utama RabbitMQ
+      RABBIT_URL: amqp://${RABBIT_USER:-guest}:${RABBIT_PASS:-guest}@rabbit-main:5672
+    depends_on:
+      db-notify: { condition: service_healthy }
+      rabbit-main: { condition: service_healthy }
+    networks: [nexus-net]
+    restart: unless-stopped
+
+  db-notify:
+    image: postgres:15-alpine
+    container_name: DB-notify-postgres
+    environment:
+      POSTGRES_USER: ${NOTIFY_DB_USER:-notify}
+      POSTGRES_PASSWORD: ${NOTIFY_DB_PASS:-notify}
+      POSTGRES_DB: ${NOTIFY_DB_NAME:-notify}
+    ports: ["5435:5432"]
+    volumes: ["notify_data:/var/lib/postgresql/data"]
+    networks: [nexus-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NOTIFY_DB_USER:-notify}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  nexus-net:
+    driver: bridge
+
+volumes:
+  auth_data:
+  bidding_data:
+  match_data:
+  audit_data:
+  notify_data:
