@@ -23,9 +23,12 @@ services:
       - RABBITMQ_ROUTING_PREFIX=${RABBITMQ_ROUTING_PREFIX:-tracker}
       - RABBITMQ_PUBLISH_RETRIES=${RABBITMQ_PUBLISH_RETRIES:-3}
       - RABBITMQ_PUBLISH_RETRY_DELAY_MS=${RABBITMQ_PUBLISH_RETRY_DELAY_MS:-200}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - PROJECT_COMPLETION_LOCK_TTL_MS=${PROJECT_COMPLETION_LOCK_TTL_MS:-10000}
     depends_on:
       - db
       - rabbitmq
+      - redis
   nginx:
     image: nginx:alpine
     ports:
@@ -75,6 +78,18 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

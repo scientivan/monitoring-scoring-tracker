@@ -11,6 +11,7 @@ Store migration files in this directory using a sortable filename format:
 - `007_create_milestone_submissions.sql`
 - `008_create_milestone_submission_reviews.sql`
 - `009_prevent_duplicate_milestone_submissions.sql`
+- `010_create_project_completions.sql`
 
 Rules:
 
