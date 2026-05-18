@@ -1,12 +1,15 @@
 const express = require("express");
 const documentService = require("../../services/document_service");
 const { buildErrorResponse } = require("../../core/api_error");
+const { handleDocumentUpload } = require("../middleware/document_upload");
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    const document = await documentService.createDocument(req.body);
+    await handleDocumentUpload(req, res);
+
+    const document = await documentService.createDocument(req.body, req.file);
 
     res.status(201).json({
       data: document,
@@ -19,9 +22,7 @@ router.post("/", async (req, res) => {
 
 router.get("/team/:teamId", async (req, res) => {
   try {
-    const documents = await documentService.listDocumentsByTeam(
-      req.params.teamId
-    );
+    const documents = await documentService.listDocumentsByTeam(req.params.teamId);
 
     res.status(200).json({
       data: documents,
@@ -47,11 +48,24 @@ router.get("/:id/download", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const document = await documentService.getDocumentById(req.params.id);
+    const document = await documentService.getDocumentDetail(req.params.id);
 
     res.status(200).json({
       data: document,
       message: "Document retrieved successfully",
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json(buildErrorResponse(error));
+  }
+});
+
+router.post("/:id/review", async (req, res) => {
+  try {
+    const review = await documentService.createDocumentReview(req.params.id, req.body);
+
+    res.status(201).json({
+      data: review,
+      message: "Document review created successfully",
     });
   } catch (error) {
     res.status(error.statusCode || 500).json(buildErrorResponse(error));

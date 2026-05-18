@@ -14,6 +14,14 @@ function notFoundError(message) {
   return new ApiError(404, "NOT_FOUND", message);
 }
 
+function conflictError(message) {
+  return new ApiError(409, "CONFLICT", message);
+}
+
+function forbiddenError(message) {
+  return new ApiError(403, "FORBIDDEN", message);
+}
+
 function buildErrorResponse(error) {
   return {
     error: {
@@ -28,5 +36,7 @@ module.exports = {
   ApiError,
   validationError,
   notFoundError,
+  conflictError,
+  forbiddenError,
   buildErrorResponse,
 };
