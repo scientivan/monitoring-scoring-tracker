@@ -25,8 +25,10 @@ function normalizeUser(body) {
     return null;
   }
 
-  // Tolerate {data:{...}} | {user:{...}} | {...} response shapes.
-  const user = body.data || body.user || body;
+  // svc-auth returns { success, message, data: { user: {...} } }.
+  // Also tolerate {data:{...}} | {user:{...}} | {...} shapes.
+  const data = body.data || body;
+  const user = data.user || data;
 
   if (!user || !user.id) {
     return null;
@@ -44,7 +46,7 @@ async function getUserById(id) {
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      "X-API-key": getInternalApiKey(),
+      "x-internal-api-key": getInternalApiKey(),
       Accept: "application/json",
     },
   });
