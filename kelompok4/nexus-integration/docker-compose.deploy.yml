@@ -207,6 +207,17 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-documents}
       # URL yang dipakai service lain / klien di tailnet untuk mengunduh file.
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://map-sandbox.tailcbdd04.ts.net:9000}
+      # Certificate + NFT minting (Base Sepolia)
+      PINATA_JWT: ${PINATA_JWT:-}
+      BASE_SEPOLIA_RPC_URL: ${BASE_SEPOLIA_RPC_URL:-}
+      BASE_SEPOLIA_NFT_CONTRACT_ADDRESS: ${BASE_SEPOLIA_NFT_CONTRACT_ADDRESS:-}
+      BASE_SEPOLIA_NFT_MINT_FUNCTION: ${BASE_SEPOLIA_NFT_MINT_FUNCTION:-safeMint}
+      BASE_SEPOLIA_NFT_CONTRACT_ABI_JSON: '["function safeMint(address to, string uri) returns (uint256)","event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"]'
+      BASE_SEPOLIA_MINTER_PRIVATE_KEY: ${BASE_SEPOLIA_MINTER_PRIVATE_KEY:-}
+      BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY:-}
+      BASE_SEPOLIA_RECIPIENT_WALLET: ${BASE_SEPOLIA_RECIPIENT_WALLET:-}
+      CERTIFICATE_ISSUER_NAME: ${CERTIFICATE_ISSUER_NAME:-Kelompok 4 Tracker Service}
+      WEASYPRINT_BIN: ${WEASYPRINT_BIN:-weasyprint}
     depends_on:
       db-audit: { condition: service_healthy }
       redis-main: { condition: service_healthy }

@@ -40,10 +40,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:id/download", async (req, res) => {
   try {
-    const download = await submissionService.getSubmissionDownload(req.params.id, {
-      actorId: req.query.actorId,
-      actorRole: req.query.actorRole,
-    });
+    const download = await submissionService.getSubmissionDownload(req.params.id);
 
     res.status(200).json({
       data: download,
@@ -69,10 +66,7 @@ router.post("/:id/review", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const submission = await submissionService.getSubmissionDetail(req.params.id, {
-      actorId: req.query.actorId,
-      actorRole: req.query.actorRole,
-    });
+    const submission = await submissionService.getSubmissionDetail(req.params.id);
 
     res.status(200).json({
       data: submission,
