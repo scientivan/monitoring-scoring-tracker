@@ -93,6 +93,7 @@ app.use(profileRoutes);
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const path = require('path');
 
 const swaggerSpec = swaggerJsdoc({
   definition: {
@@ -104,7 +105,7 @@ const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       {
-        url: 'http://localhost:' + (process.env.PORT || 3000),
+        url: 'http://map-sandbox.tailcbdd04.ts.net',
       },
     ],
     components: {
@@ -122,9 +123,13 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: ['./routes/*.js'], // ini penting
+  apis: ['./routes/**/*.js']
 });
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0');
+
+
 
 module.exports = app;
