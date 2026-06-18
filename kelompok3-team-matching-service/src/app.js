@@ -95,6 +95,8 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const path = require('path');
 
+const swaggerApiPattern = path.resolve(__dirname, 'routes', '**', '*.js').replaceAll('\\', '/');
+
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: '3.0.0',
@@ -105,16 +107,11 @@ const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       {
-        url: 'http://map-sandbox.tailcbdd04.ts.net',
+        url: 'http://localhost:8080',
       },
     ],
     components: {
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
         serviceKeyAuth: {
           type: 'apiKey',
           in: 'header',
@@ -123,7 +120,8 @@ const swaggerSpec = swaggerJsdoc({
       },
     },
   },
-  apis: ['./routes/**/*.js']
+
+  apis: [swaggerApiPattern],
 });
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
