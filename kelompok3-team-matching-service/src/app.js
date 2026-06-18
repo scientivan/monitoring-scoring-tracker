@@ -91,4 +91,40 @@ app.use(internalRoutes);
 // Profile routes
 app.use(profileRoutes);
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Team Matching Service API',
+      version: 'v4-student-name',
+      description: 'API documentation for team matching system',
+    },
+    servers: [
+      {
+        url: 'http://localhost:' + (process.env.PORT || 3000),
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+        serviceKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-service-key',
+        },
+      },
+    },
+  },
+  apis: ['./routes/*.js'], // ini penting
+});
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 module.exports = app;

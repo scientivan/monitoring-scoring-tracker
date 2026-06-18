@@ -42,7 +42,37 @@ async function handleCreateJoinRequest(req, res, teamId) {
 /** ==========================================
  * 1. TEAM CORE & DISCOVERY
  * ========================================== */
-
+/**
+ * @openapi
+ * /profile/skills:
+ *   get:
+ *     summary: Ambil skill profile user
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "2024-1"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 student_id: "12345"
+ *                 skills:
+ *                   - name: "Node.js"
+ *                     level: 4
+ *       500:
+ *         description: Internal error
+ */
 // POST /teams (Buat tim baru)
 router.post('/teams', auth, requireStudentRole, async (req, res) => {
   try {
@@ -75,6 +105,48 @@ router.post('/teams', auth, requireStudentRole, async (req, res) => {
   }
 });
 
+
+/**
+ * @openapi
+ * /teams/{id}/required-skills:
+ *   put:
+ *     summary: PO menetapkan required skills tim
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - required_skills
+ *             properties:
+ *               required_skills:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     skill_name:
+ *                       type: string
+ *                     required_count:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Updated successfully
+ *       403:
+ *         description: Forbidden (not PO)
+ *       404:
+ *         description: Team not found
+ */
 // PUT /teams/:id/required-skills (PO set skill target)
 router.put('/teams/:id/required-skills', auth, requireStudentRole, async (req, res) => {
   try {
@@ -86,6 +158,27 @@ router.put('/teams/:id/required-skills', auth, requireStudentRole, async (req, r
   }
 });
 
+/**
+ * @openapi
+ * /teams:
+ *   get:
+ *     summary: Ambil daftar tim (forming)
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: needs_skill
+ *         schema:
+ *           type: string
+ *         description: Filter berdasarkan skill
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal error
+ */
 // GET /teams (Lihat daftar tim forming)
 router.get('/teams', auth, async (req, res) => {
   try {
@@ -97,6 +190,29 @@ router.get('/teams', auth, async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /teams/{id}:
+ *   get:
+ *     summary: Detail tim + komposisi + scoring
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Internal error
+ */
 // GET /teams/:id (Lihat komposisi dan SKOR tim)
 router.get('/teams/:id', auth, async (req, res) => {
   try {
@@ -112,7 +228,44 @@ router.get('/teams/:id', auth, async (req, res) => {
 /** ==========================================
  * 2. INVITATIONS (PO undang Talent)
  * ========================================== */
-
+/**
+ * @openapi
+ * /teams/{id}/invites:
+ *   post:
+ *     summary: PO mengundang member ke tim
+ *     tags:
+ *       - Invitations
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - invitee_student_id
+ *             properties:
+ *               invitee_student_id:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Invite created
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Invitee not found
+ *       409:
+ *         description: Duplicate invite
+ */
 // POST /teams/:id/invites (PO kirim undangan)
 router.post('/teams/:id/invites', auth, requireStudentRole, async (req, res) => {
   try {
@@ -130,6 +283,39 @@ router.post('/teams/:id/invites', auth, requireStudentRole, async (req, res) => 
   }
 });
 
+/**
+ * @openapi
+ * /invites/{id}/respond:
+ *   put:
+ *     summary: Respond undangan tim
+ *     tags:
+ *       - Invitations
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - response
+ *             properties:
+ *               response:
+ *                 type: string
+ *                 enum: [accepted, rejected]
+ *     responses:
+ *       200:
+ *         description: Success
+ *       400:
+ *         description: Invalid response
+ *       403:
+ *         description: Forbidden
+ */
 // PUT /invites/:id/respond (Talent terima/tolak undangan)
 router.put('/invites/:id/respond', auth, requireStudentRole, async (req, res) => {
   try {
@@ -154,12 +340,70 @@ router.put('/invites/:id/respond', auth, requireStudentRole, async (req, res) =>
 /** ==========================================
  * 3. JOIN REQUESTS (Talent memohon gabung)
  * ========================================== */
-
+/**
+ * @openapi
+ * /join-requests:
+ *   post:
+ *     summary: Talent request join ke tim
+ *     tags:
+ *       - Join Requests
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - team_id
+ *             properties:
+ *               team_id:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Invalid team
+ */
 // POST /join-requests (Talent apply ke tim via payload team_id)
 router.post('/join-requests', auth, requireStudentRole, async (req, res) => {
   return handleCreateJoinRequest(req, res, req.body.team_id || req.body.teamId);
 });
 
+/**
+ * @openapi
+ * /join-requests/{req}/respond:
+ *   put:
+ *     summary: PO respond join request
+ *     tags:
+ *       - Join Requests
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: req
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - action
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [accepted, rejected]
+ *     responses:
+ *       200:
+ *         description: Success
+ *       403:
+ *         description: Forbidden
+ */
 // PUT /join-requests/:req/respond (PO acc/reject permohonan) - global alias
 router.put('/join-requests/:req/respond', auth, requireStudentRole, async (req, res) => {
   try {
@@ -179,11 +423,56 @@ router.put('/join-requests/:req/respond', auth, requireStudentRole, async (req, 
   }
 });
 
+/**
+ * @openapi
+ * /teams/{id}/members/{sid}:
+ *   delete:
+ *     summary: PO mengeluarkan member dari tim
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *       - in: path
+ *         name: sid
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Member removed
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not found
+ */
 // POST /teams/:id/join-requests (Talent apply ke tim)
 router.post('/teams/:id/join-requests', auth, requireStudentRole, async (req, res) => {
   return handleCreateJoinRequest(req, res, req.params.id);
 });
 
+/**
+ * @openapi
+ * /teams/{id}/members/me:
+ *   delete:
+ *     summary: Member keluar dari tim
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Left team
+ *       400:
+ *         description: PO cannot leave
+ *       404:
+ *         description: Team not found
+ */
 // PUT /teams/:id/join-requests/:req_id (PO acc/reject permohonan)
 router.put('/teams/:id/join-requests/:req_id', auth, requireStudentRole, async (req, res) => {
   try {

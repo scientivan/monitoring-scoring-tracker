@@ -4,6 +4,37 @@ const { getProfileSkills, updateProfileSkills } = require('../services/profileSe
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /profile/skills:
+ *   get:
+ *     summary: Ambil skill profile user
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "2024-1"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 student_id: "12345"
+ *                 skills:
+ *                   - name: "Node.js"
+ *                     level: 4
+ *       500:
+ *         description: Internal error
+ */
 // GET Profile Skills
 router.get('/profile/skills', auth, async (req, res) => {
   try {
@@ -15,6 +46,38 @@ router.get('/profile/skills', auth, async (req, res) => {
   }
 });
 
+
+/**
+ * @openapi
+ * /profile/skills:
+ *   get:
+ *     summary: Ambil skill profile user
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "2024-1"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 student_id: "12345"
+ *                 skills:
+ *                   - name: "Node.js"
+ *                     level: 4
+ *       500:
+ *         description: Internal error
+ */
 // PUT Update Profile Skills
 router.put('/profile/skills', auth, async (req, res) => {
   try {

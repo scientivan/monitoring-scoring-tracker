@@ -5,6 +5,41 @@ const { getTeamById } = require('../services/teamService');
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /recommendations/members:
+ *   get:
+ *     summary: PO minta rekomendasi anggota
+ *     tags:
+ *       - Recommendation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: team_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID team
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 team_id: "123"
+ *                 recommendations: []
+ *       400:
+ *         description: team_id required
+ *       403:
+ *         description: forbidden (bukan PO tim)
+ *       404:
+ *         description: team not found
+ *       500:
+ *         description: internal error
+ */
 // FR-014: PO minta rekomendasi anggota
 router.get('/recommendations/members', auth, async (req, res) => {
   try {
@@ -33,6 +68,34 @@ router.get('/recommendations/members', auth, async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /recommendations/teams:
+ *   get:
+ *     summary: Talent minta rekomendasi tim
+ *     tags:
+ *       - Recommendation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "2024-1"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 recommendations: []
+ *       500:
+ *         description: internal error
+ */
 // FR-015: Talent minta rekomendasi tim
 router.get('/recommendations/teams', auth, async (req, res) => {
   try {

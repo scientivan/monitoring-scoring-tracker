@@ -11,6 +11,41 @@ function requireServiceKey(req, res, next) {
   next();
 }
 
+/**
+ * @openapi
+ * /internal/check-team/{student_id}:
+ *   get:
+ *     summary: Internal check apakah student sedang memiliki tim aktif
+ *     tags:
+ *       - Internal
+ *     security:
+ *       - serviceKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: student_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: "123456"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 student_id: "123456"
+ *                 has_team: true
+ *                 role_in_team: "po"
+ *                 team_id: "team_001"
+ *                 team_name: "Team Alpha"
+ *                 status: "forming"
+ *       401:
+ *         description: Unauthorized service (invalid service key)
+ *       500:
+ *         description: Internal error
+ */
 router.get('/internal/check-team/:student_id', requireServiceKey, async (req, res) => {
   try {
     const { student_id } = req.params;
